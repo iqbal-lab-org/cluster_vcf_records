@@ -1,0 +1,4 @@
+#file2 header
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	sample_from_vcf_2
+ref.1	8	id4	C	G	PASS	SVTYPE=SNP	GT	1/1
+ref.3	8	id5	A	G	PASS	SVTYPE=SNP	GT	1/1
