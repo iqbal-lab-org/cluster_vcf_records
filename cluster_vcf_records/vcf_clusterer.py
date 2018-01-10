@@ -1,6 +1,5 @@
 import logging
 import operator
-import sys
 
 import pyfastaq
 
