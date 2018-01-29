@@ -111,9 +111,12 @@ class VcfRecordCluster:
                 alt_seq[position - final_start] = combination[i]
             alleles.add(''.join(alt_seq))
 
-        # remove the ref allele, because it goes in the REF
+        # remove the ref allele (if it's there), because it goes in the REF
         # column of the VCF
-        alleles.remove(ref_seq_for_vcf)
+        try:
+            alleles.remove(ref_seq_for_vcf)
+        except:
+            pass
 
         logging.debug('make_one_merged_vcf_record_for_gramtools() generate non-SNP alleles')
         # add in the non-snp alleles. Need to add the flanking regions
