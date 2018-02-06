@@ -238,3 +238,21 @@ class VcfRecord:
         else:
             return None
 
+
+    def called_alts_from_genotype(self):
+        '''Returns a set of the (maybe REF and) ALT strings that were called, using GT in FORMAT.
+        Returns None if GT not in the record'''
+        if 'GT' not in self.FORMAT:
+            return None
+
+        genotype_indexes = set([int(x) for x in self.FORMAT['GT'].split('/')])
+        alts = set()
+
+        for i in genotype_indexes:
+            if i == 0:
+                alts.add(self.REF)
+            else:
+                alts.add(self.ALT[i-1])
+
+        return alts
+
