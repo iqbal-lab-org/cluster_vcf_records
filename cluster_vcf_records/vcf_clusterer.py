@@ -64,7 +64,7 @@ class VcfClusterer:
         sample_name = None
 
         for filename in filename_list:
-            headers[filename], new_records = vcf_file_read.vcf_file_to_dict(filename, homozygous_only=homozygous_only, remove_asterisk_alts=True, max_REF_len=max_REF_len, remove_useless_start_nulceotides=True)
+            headers[filename], new_records = vcf_file_read.vcf_file_to_dict(filename, homozygous_only=homozygous_only, remove_asterisk_alts=True, max_REF_len=max_REF_len, remove_useless_start_nucleotides=True)
 
             new_sample_name = vcf_file_read.get_sample_name_from_vcf_header_lines(headers[filename])
             if sample_name is None and new_sample_name is not None:

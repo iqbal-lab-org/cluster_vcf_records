@@ -7,7 +7,7 @@ from cluster_vcf_records import vcf_record
 
 class Error (Exception): pass
 
-def vcf_file_to_dict(infile, sort=True, homozygous_only=False, remove_asterisk_alts=False, max_REF_len=None, remove_useless_start_nulceotides=False):
+def vcf_file_to_dict(infile, sort=True, homozygous_only=False, remove_asterisk_alts=False, max_REF_len=None, remove_useless_start_nucleotides=False):
     header_lines = []
     records = {}
     f = pyfastaq.utils.open_file_read(infile)
@@ -31,7 +31,7 @@ def vcf_file_to_dict(infile, sort=True, homozygous_only=False, remove_asterisk_a
             counts['alt_is_asterisk'] += 1
             continue
 
-        if remove_useless_start_nulceotides:
+        if remove_useless_start_nucleotides:
             record.remove_useless_start_nucleotides()
 
         if max_REF_len is not None and len(record.REF) > max_REF_len:
