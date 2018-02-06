@@ -262,3 +262,16 @@ class TestVcfRecord(unittest.TestCase):
         self.assertEqual(None, record.total_coverage())
         record = vcf_record.VcfRecord('ref\t3\tid_foo\tC\tA\t42.42\tPASS\tKMER=31;SVLEN=0;SVTYPE=SNP\tGT:COV:GT_CONF\t1/1:1,2,39:39.80\n')
         self.assertEqual(42, record.total_coverage())
+
+
+    def test_called_alts_from_genotype(self):
+        '''test called_alts_from_genotype'''
+        record = vcf_record.VcfRecord('ref\t3\tid_foo\tC\tA\t42.42\tPASS\tKMER=31;SVLEN=0;SVTYPE=SNP\tGT_CONF\t39.80\n')
+        self.assertEqual(None, record.called_alts_from_genotype())
+        record = vcf_record.VcfRecord('ref\t3\tid_foo\tC\tA,G,T\t42.42\tPASS\tKMER=31;SVLEN=0;SVTYPE=SNP\tGT:GT_CONF\t0/0:39.80\n')
+        self.assertEqual({'C'}, record.called_alts_from_genotype())
+        record = vcf_record.VcfRecord('ref\t3\tid_foo\tC\tA,G,T\t42.42\tPASS\tKMER=31;SVLEN=0;SVTYPE=SNP\tGT:GT_CONF\t1/2:39.80\n')
+        self.assertEqual({'A', 'G'}, record.called_alts_from_genotype())
+        record = vcf_record.VcfRecord('ref\t3\tid_foo\tC\tA,G,T\t42.42\tPASS\tKMER=31;SVLEN=0;SVTYPE=SNP\tGT:GT_CONF\t1/1:39.80\n')
+        self.assertEqual({'A'}, record.called_alts_from_genotype())
+
