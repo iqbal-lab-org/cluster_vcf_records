@@ -148,7 +148,8 @@ class VcfRecord:
             '.',
             ref_seq_for_vcf,
             ''.join(alt_seq),
-            '.', '.', '.'
+            '.', '.', 'SVTYPE=MERGED',
+            'GT', '1/1',
         ]))
 
 

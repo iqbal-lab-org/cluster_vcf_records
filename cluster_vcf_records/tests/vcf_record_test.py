@@ -111,14 +111,14 @@ class TestVcfRecord(unittest.TestCase):
         self.assertIsNone(record3.merge(record1, ref_seq))
 
         got = record3.merge(record4, ref_seq)
-        expected = vcf_record.VcfRecord('ref\t2\t.\tGC\tAACAT\t.\t.\t.')
+        expected = vcf_record.VcfRecord('ref\t2\t.\tGC\tAACAT\t.\t.\tSVTYPE=MERGED\tGT\t1/1')
         self.assertEqual(expected, got)
         got = record4.merge(record3, ref_seq)
-        expected = vcf_record.VcfRecord('ref\t2\t.\tGC\tAACAT\t.\t.\t.')
+        expected = vcf_record.VcfRecord('ref\t2\t.\tGC\tAACAT\t.\t.\tSVTYPE=MERGED\tGT\t1/1')
         self.assertEqual(expected, got)
 
         got = record4.merge(record5, ref_seq)
-        expected = vcf_record.VcfRecord('ref\t3\t.\tCTAGG\tCATTAGC\t.\t.\t.')
+        expected = vcf_record.VcfRecord('ref\t3\t.\tCTAGG\tCATTAGC\t.\t.\tSVTYPE=MERGED\tGT\t1/1')
         self.assertEqual(expected, got)
 
 
