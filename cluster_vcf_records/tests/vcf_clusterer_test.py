@@ -66,17 +66,31 @@ class TestVcfClusterer(unittest.TestCase):
         self.assertEqual([cluster1], got)
 
 
-    def test_run(self):
-        '''test run'''
+    def test_run_gramtools_merge(self):
+        '''test run using merge_method gramtools'''
         vcf_files = [
-            os.path.join(data_dir, 'run.1.vcf'),
-            os.path.join(data_dir, 'run.2.vcf'),
+            os.path.join(data_dir, 'run.gramtools_merge.1.vcf'),
+            os.path.join(data_dir, 'run.gramtools_merge.2.vcf'),
         ]
-        ref_fasta = os.path.join(data_dir, 'run.ref.fa')
-        tmp_out = 'tmp.vcf_clusterer.run.out.vcf'
+        ref_fasta = os.path.join(data_dir, 'run.gramtools_merge.ref.fa')
+        tmp_out = 'tmp.vcf_clusterer.run.gramtools_merge.out.vcf'
         clusterer = vcf_clusterer.VcfClusterer(vcf_files, ref_fasta, tmp_out, source='source_name')
         clusterer.run()
-        expected_vcf = os.path.join(data_dir, 'run.out.vcf')
+        expected_vcf = os.path.join(data_dir, 'run.gramtools_merge.out.vcf')
         self.assertTrue(filecmp.cmp(expected_vcf, tmp_out, shallow=False))
         os.unlink(tmp_out)
 
+
+    def test_run_simple_merge(self):
+        '''test run using merge_method simple'''
+        vcf_files = [
+            os.path.join(data_dir, 'run.simple_merge.1.vcf'),
+            os.path.join(data_dir, 'run.simple_merge.2.vcf'),
+        ]
+        ref_fasta = os.path.join(data_dir, 'run.simple_merge.ref.fa')
+        tmp_out = 'tmp.vcf_clusterer.run.simple_merge.out.vcf'
+        clusterer = vcf_clusterer.VcfClusterer(vcf_files, ref_fasta, tmp_out, source='source_name', merge_method='simple')
+        clusterer.run()
+        expected_vcf = os.path.join(data_dir, 'run.simple_merge.out.vcf')
+        self.assertTrue(filecmp.cmp(expected_vcf, tmp_out, shallow=False))
+        os.unlink(tmp_out)
