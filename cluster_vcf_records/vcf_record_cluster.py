@@ -110,6 +110,10 @@ class VcfRecordCluster:
             for i, position in enumerate(snp_positions):
                 alt_seq[position - final_start] = combination[i]
             alleles.add(''.join(alt_seq))
+            for non_snp_pos, non_snp_ref, non_snp_alt in non_snps:
+                start_pos = non_snp_pos - final_start
+                new_seq = alt_seq[:start_pos] + list(non_snp_alt) + alt_seq[start_pos + len(non_snp_ref):]
+                alleles.add(''.join(new_seq))
 
         # remove the ref allele (if it's there), because it goes in the REF
         # column of the VCF
@@ -118,16 +122,7 @@ class VcfRecordCluster:
         except:
             pass
 
-        logging.debug('make_one_merged_vcf_record_for_gramtools() generate non-SNP alleles')
-        # add in the non-snp alleles. Need to add the flanking regions
-        for pos, ref, alt in non_snps:
-            fields = [chrom_name, str(pos + 1), '.', ref, alt, '.', 'PASS', 'SVTYPE=COMPLEX']
-            new_vcf = vcf_record.VcfRecord('\t'.join(fields))
-            new_vcf.add_flanking_seqs(ref_seq, final_start, final_end)
-            alleles.add(new_vcf.ALT[0])
-
         alleles = sorted(list(alleles))
-
         fields = [chrom_name, str(final_start + 1), '.', ref_seq_for_vcf,
                   ','.join(alleles), '.', 'PASS', 'SVTYPE=COMPLEX']
         logging.debug('make_one_merged_vcf_record_for_gramtools number of alts: ' + str(len(alleles)))

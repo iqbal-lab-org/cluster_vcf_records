@@ -81,3 +81,10 @@ class TestVcfRecordCluster(unittest.TestCase):
         expected = vcf_record.VcfRecord('ref\t8\t.\tTGCGTAT\tT,TGAAAACAT,TGCGAAT,TGCGCAT,TGGGAAT,TGGGCAT,TGGGTAT\t.\tPASS\tSVTYPE=COMPLEX')
         self.assertEqual(expected, cluster.make_one_merged_vcf_record_for_gramtools(ref_seq))
 
+        # Test insertion next to SNP
+        record5 = vcf_record.VcfRecord('ref\t3\t.\tC\tCG\t42.42\tPASS\tSVTPYPE=INDEL\tGT\t1/1')
+        record6 = vcf_record.VcfRecord('ref\t4\t.\tT\tA\t42.42\tPASS\tSVTPYPE=SNP\tGT\t1/1')
+        cluster = vcf_record_cluster.VcfRecordCluster(vcf_record=record5, max_distance_between_variants=1)
+        self.assertTrue(cluster.add_vcf_record(record6))
+        expected = vcf_record.VcfRecord('ref\t3\t.\tCT\tCA,CGA,CGT\t.\tPASS\tSVTYPE=COMPLEX')
+        self.assertEqual(expected, cluster.make_one_merged_vcf_record_for_gramtools(ref_seq))
