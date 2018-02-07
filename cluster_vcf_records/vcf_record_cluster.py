@@ -128,3 +128,23 @@ class VcfRecordCluster:
         logging.debug('make_one_merged_vcf_record_for_gramtools number of alts: ' + str(len(alleles)))
         return vcf_record.VcfRecord('\t'.join(fields))
 
+
+    def make_simple_merged_vcf_with_no_combinations(self, ref_seq):
+        '''Does a simple merging of all variants in this cluster.
+        Assumes one ALT in each variant. Uses the ALT for each
+        variant, making one new vcf_record that has all the variants
+        put together'''
+        if len(self) <= 1:
+            return
+
+        merged_vcf_record = self.vcf_records[0]
+
+        for i in range(1, len(self.vcf_records), 1):
+            if self.vcf_records[i].intersects(merged_vcf_record):
+                return
+            else:
+                merged_vcf_record = merged_vcf_record.merge(self.vcf_records[i], ref_seq)
+
+        self.vcf_records = [merged_vcf_record]
+
+
