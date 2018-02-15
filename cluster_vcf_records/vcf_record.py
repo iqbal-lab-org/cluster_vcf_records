@@ -257,3 +257,24 @@ class VcfRecord:
 
         return alts
 
+
+    def is_the_same_indel(self, other_record, ref_seq):
+        '''Returns True iff this record and other_record are the "same"
+        indel. At repeats, there is more than one way to report the same
+        variant. eg:
+        pos=42, ref=CAAA, alt=CAA
+        pos=43, ref=AAA, alt=AA
+        pos=44, ref=AA, alt=A'''
+        if self.is_snp() or other_record.is_snp() or self.CHROM != other_record.CHROM:
+            return False
+
+        # make records that start and end in the same place.
+        # Then compare the REF and ALT sequences
+        record1 = copy.copy(self)
+        record2 = copy.copy(other_record)
+        new_start = min(self.POS, other_record.POS)
+        new_end = max(self.ref_end_pos(), other_record.ref_end_pos())
+        record1.add_flanking_seqs(ref_seq, new_start, new_end)
+        record2.add_flanking_seqs(ref_seq, new_start, new_end)
+        return record1.REF == record2.REF and record1.ALT == record2.ALT
+

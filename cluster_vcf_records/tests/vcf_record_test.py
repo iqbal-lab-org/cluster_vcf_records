@@ -1,3 +1,4 @@
+import itertools
 import unittest
 
 import pyfastaq
@@ -275,3 +276,76 @@ class TestVcfRecord(unittest.TestCase):
         record = vcf_record.VcfRecord('ref\t3\tid_foo\tC\tA,G,T\t42.42\tPASS\tKMER=31;SVLEN=0;SVTYPE=SNP\tGT:GT_CONF\t1/1:39.80\n')
         self.assertEqual({'A'}, record.called_alts_from_genotype())
 
+
+    def test_is_the_same_indel(self):
+        '''test is_the_same_indel'''
+        #          123456789012345678901234567890
+        ref_seq = 'ACACTCGGGTAGTCAGCGCGCTGATGGCGA'
+        snp = vcf_record.VcfRecord('ref\t3\t.\tA\tG\t.\tPASS\tSVTYPE=SNP\n')
+
+        # test homopolymer runs
+        deletions = [
+            vcf_record.VcfRecord('ref\t5\t.\tTCGGG\tTCGG\t.\tPASS\tSVTYPE=SNP\n'),
+            vcf_record.VcfRecord('ref\t6\t.\tCGGG\tCGG\t.\tPASS\tSVTYPE=SNP\n'),
+            vcf_record.VcfRecord('ref\t6\t.\tCGG\tCG\t.\tPASS\tSVTYPE=SNP\n'),
+            vcf_record.VcfRecord('ref\t6\t.\tCG\tC\t.\tPASS\tSVTYPE=SNP\n'),
+            vcf_record.VcfRecord('ref\t7\t.\tGGG\tGG\t.\tPASS\tSVTYPE=SNP\n'),
+            vcf_record.VcfRecord('ref\t7\t.\tGG\tG\t.\tPASS\tSVTYPE=SNP\n'),
+            vcf_record.VcfRecord('ref\t8\t.\tGG\tG\t.\tPASS\tSVTYPE=SNP\n'),
+        ]
+        insertions = [
+            vcf_record.VcfRecord('ref\t5\t.\tTC\tTCG\t.\tPASS\tSVTYPE=SNP\n'),
+            vcf_record.VcfRecord('ref\t6\t.\tC\tCG\t.\tPASS\tSVTYPE=SNP\n'),
+            vcf_record.VcfRecord('ref\t6\t.\tCG\tCGG\t.\tPASS\tSVTYPE=SNP\n'),
+            vcf_record.VcfRecord('ref\t6\t.\tCGG\tCGGG\t.\tPASS\tSVTYPE=SNP\n'),
+            vcf_record.VcfRecord('ref\t6\t.\tCGGG\tCGGGG\t.\tPASS\tSVTYPE=SNP\n'),
+            vcf_record.VcfRecord('ref\t7\t.\tG\tGG\t.\tPASS\tSVTYPE=SNP\n'),
+            vcf_record.VcfRecord('ref\t8\t.\tG\tGG\t.\tPASS\tSVTYPE=SNP\n'),
+            vcf_record.VcfRecord('ref\t8\t.\tGG\tGGG\t.\tPASS\tSVTYPE=SNP\n'),
+            vcf_record.VcfRecord('ref\t9\t.\tG\tGG\t.\tPASS\tSVTYPE=SNP\n'),
+        ]
+
+        del1 = vcf_record.VcfRecord('ref\t6\t.\tCGGG\tCG\t.\tPASS\tSVTYPE=SNP\n')
+        ins1 = vcf_record.VcfRecord('ref\t5\t.\tTC\tTCA\t.\tPASS\tSVTYPE=SNP\n')
+
+
+        for vcf1, vcf2 in itertools.permutations(deletions, 2):
+            self.assertTrue(vcf1.is_the_same_indel(vcf2, ref_seq))
+
+        for vcf1, vcf2 in itertools.permutations(insertions, 2):
+            self.assertTrue(vcf1.is_the_same_indel(vcf2, ref_seq))
+
+        for vcf in deletions:
+            self.assertFalse(vcf.is_the_same_indel(del1, ref_seq))
+            self.assertFalse(vcf.is_the_same_indel(snp, ref_seq))
+
+        for vcf in insertions:
+            self.assertFalse(vcf.is_the_same_indel(ins1, ref_seq))
+            self.assertFalse(vcf.is_the_same_indel(snp, ref_seq))
+
+        # test dinucleotide repeats
+        deletions = [
+            vcf_record.VcfRecord('ref\t15\t.\tAGCGCGC\tAGCGC\t.\tPASS\tSVTYPE=SNP\n'),
+            vcf_record.VcfRecord('ref\t15\t.\tAGCGC\tAGC\t.\tPASS\tSVTYPE=SNP\n'),
+            vcf_record.VcfRecord('ref\t15\t.\tAGC\tA\t.\tPASS\tSVTYPE=SNP\n'),
+            vcf_record.VcfRecord('ref\t17\t.\tCGCGC\tCGC\t.\tPASS\tSVTYPE=SNP\n'),
+            vcf_record.VcfRecord('ref\t17\t.\tCGC\tC\t.\tPASS\tSVTYPE=SNP\n'),
+            vcf_record.VcfRecord('ref\t19\t.\tCGC\tC\t.\tPASS\tSVTYPE=SNP\n'),
+        ]
+
+        insertions = [
+            vcf_record.VcfRecord('ref\t15\t.\tA\tAGC\t.\tPASS\tSVTYPE=SNP\n'),
+            vcf_record.VcfRecord('ref\t15\t.\tAGC\tAGCGC\t.\tPASS\tSVTYPE=SNP\n'),
+            vcf_record.VcfRecord('ref\t15\t.\tAGCGC\tAGCGCGC\t.\tPASS\tSVTYPE=SNP\n'),
+            vcf_record.VcfRecord('ref\t15\t.\tAGCGCGC\tAGCGCGCGC\t.\tPASS\tSVTYPE=SNP\n'),
+            vcf_record.VcfRecord('ref\t17\t.\tC\tCGC\t.\tPASS\tSVTYPE=SNP\n'),
+            vcf_record.VcfRecord('ref\t17\t.\tCGC\tCGCGC\t.\tPASS\tSVTYPE=SNP\n'),
+            vcf_record.VcfRecord('ref\t17\t.\tCGCGC\tCGCGCGC\t.\tPASS\tSVTYPE=SNP\n'),
+            vcf_record.VcfRecord('ref\t19\t.\tCGC\tCGCGC\t.\tPASS\tSVTYPE=SNP\n'),
+        ]
+
+        for vcf1, vcf2 in itertools.permutations(deletions, 2):
+            self.assertTrue(vcf1.is_the_same_indel(vcf2, ref_seq))
+
+        for vcf1, vcf2 in itertools.permutations(insertions, 2):
+            self.assertTrue(vcf1.is_the_same_indel(vcf2, ref_seq))
