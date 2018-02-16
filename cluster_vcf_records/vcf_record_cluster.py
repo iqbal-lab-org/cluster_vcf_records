@@ -154,10 +154,10 @@ class VcfRecordCluster:
         self.vcf_records = [merged_vcf_record]
 
 
-    def make_separate_indels_and_one_with_all_snps_no_combinations(self, ref_seq):
-        '''Returns a list of VCF records, where each indel from this
-        cluster is in a separate record. Then all the remaining SNPs are
-        applied to make one record. If >1 SNP in same place, either one
+    def make_separate_indels_and_one_alt_with_all_snps_no_combinations(self, ref_seq):
+        '''Returns a VCF record, where each indel from this
+        cluster is in a separate ALT. Then all the remaining SNPs are
+        applied to make one ALT. If >1 SNP in same place, either one
         might be used'''
         final_start_position = min([x.POS for x in self.vcf_records])
         final_end_position = max([x.ref_end_pos() for x in self.vcf_records])
@@ -175,13 +175,14 @@ class VcfRecordCluster:
         if len(snps):
             new_record = copy.copy(snps[0])
             for snp in snps[1:]:
-                new_record.merge(snp, ref_seq)
+                merged = new_record.merge(snp, ref_seq)
+                if merged is not None:
+                    new_record = merged
             new_record.add_flanking_seqs(ref_seq, final_start_position, final_end_position)
             new_vcf_records.append(new_record)
 
-        # gramtools need the filter to be PASS
-        for record in new_vcf_records:
-            record.FILTER = 'PASS'
+        alts = ','.join([x.ALT[0] for x in new_vcf_records])
+        new_record = vcf_record.VcfRecord('\t'.join([self.vcf_records[0].CHROM, str(final_start_position + 1), '.', new_vcf_records[0].REF, alts, '.', 'PASS', '.']))
 
-        return new_vcf_records
+        return new_record
 

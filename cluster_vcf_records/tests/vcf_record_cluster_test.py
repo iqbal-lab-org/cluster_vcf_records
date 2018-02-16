@@ -128,8 +128,8 @@ class TestVcfRecordCluster(unittest.TestCase):
         self.assertEqual(expected, cluster[0])
 
 
-    def test_make_separate_indels_and_one_with_all_snps_no_combinations(self):
-        '''test make_separate_indels_and_one_with_all_snps_no_combinations'''
+    def test_make_separate_indels_and_one_alt_with_all_snps_no_combinations(self):
+        '''test make_separate_indels_and_one_alt_with_all_snps_no_combinations'''
         ref_seq = pyfastaq.sequences.Fasta('ref', 'AGCTAGGTCAG')
         snp1 = vcf_record.VcfRecord('ref\t4\t.\tT\tA\t.\t.\t.\t.')
         snp2 = vcf_record.VcfRecord('ref\t9\t.\tC\tG\t.\t.\t.\t.')
@@ -139,15 +139,7 @@ class TestVcfRecordCluster(unittest.TestCase):
         self.assertTrue(cluster.add_vcf_record(snp1))
         self.assertTrue(cluster.add_vcf_record(snp2))
         self.assertTrue(cluster.add_vcf_record(insertion))
-
-        got = cluster.make_separate_indels_and_one_with_all_snps_no_combinations(ref_seq)
-        insertion.FILTER = 'PASS'
-        deletion.FILTER = 'PASS'
-
-        insertion.add_flanking_seqs(ref_seq, 2, deletion.ref_end_pos())
-        expected = [
-            deletion,
-            insertion,
-            vcf_record.VcfRecord('ref\t3\t.\tCTAGGTCA\tCAAGGTCA\t.\tPASS\t.'),
-        ]
+        got = cluster.make_separate_indels_and_one_alt_with_all_snps_no_combinations(ref_seq)
+        expected = vcf_record.VcfRecord('ref\t3\t.\tCTAGGTCA\tG,CTATTGGTCA,CAAGGTGA\t.\tPASS\t.')
         self.assertEqual(expected, got)
+
