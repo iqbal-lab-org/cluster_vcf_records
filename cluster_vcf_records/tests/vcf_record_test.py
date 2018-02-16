@@ -349,3 +349,14 @@ class TestVcfRecord(unittest.TestCase):
 
         for vcf1, vcf2 in itertools.permutations(insertions, 2):
             self.assertTrue(vcf1.is_the_same_indel(vcf2, ref_seq))
+
+
+    def test_to_record_per_alt(self):
+        '''test to_record_per_alt'''
+        vcf = vcf_record.VcfRecord('ref\t42\t.\tA\tC\t.\tPASS\tSVTYPE=SNP\n')
+        self.assertEqual([vcf], vcf.to_record_per_alt())
+        vcf = vcf_record.VcfRecord('ref\t42\t.\tA\tC,TC\t.\tPASS\tSVTYPE=SNP\n')
+        vcf_c = vcf_record.VcfRecord('ref\t42\t.\tA\tC\t.\tPASS\tSVTYPE=SNP\n')
+        vcf_tc = vcf_record.VcfRecord('ref\t42\t.\tA\tTC\t.\tPASS\tSVTYPE=SNP\n')
+        self.assertEqual([vcf_c, vcf_tc], vcf.to_record_per_alt())
+

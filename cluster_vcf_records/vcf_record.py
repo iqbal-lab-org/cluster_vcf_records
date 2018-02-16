@@ -284,3 +284,14 @@ class VcfRecord:
         record2.add_flanking_seqs(ref_seq, new_start, new_end)
         return record1.REF == record2.REF and record1.ALT == record2.ALT
 
+
+    def to_record_per_alt(self):
+        '''Returns list of vcf_records. One per variant
+        in the ALT column. Does not change INFO/FORMAT etc columns, which
+        means that they are now broken'''
+        record_list = []
+        for alt in self.ALT:
+            record_list.append(copy.copy(self))
+            record_list[-1].ALT = [alt]
+        return record_list
+
