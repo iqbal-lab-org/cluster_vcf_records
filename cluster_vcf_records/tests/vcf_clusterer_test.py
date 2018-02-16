@@ -42,6 +42,24 @@ class TestVcfClusterer(unittest.TestCase):
         self.assertEqual(expected_records, got_records)
 
 
+    def test_expand_alts_in_vcf_record_list(self):
+        '''test _expand_alts_in_vcf_record_list'''
+        vcf_records = [
+            vcf_record.VcfRecord('ref\t42\t.\tA\tC,T\t.\tPASS\tSVTYPE=SNP\n'),
+            vcf_record.VcfRecord('ref\t42\t.\tA\tG\t.\tPASS\tSVTYPE=SNP\n'),
+            vcf_record.VcfRecord('ref\t44\t.\tA\tC\t.\tPASS\tSVTYPE=SNP\n'),
+        ]
+        expected = [
+            vcf_record.VcfRecord('ref\t42\t.\tA\tC\t.\tPASS\tSVTYPE=SNP\n'),
+            vcf_record.VcfRecord('ref\t42\t.\tA\tT\t.\tPASS\tSVTYPE=SNP\n'),
+            vcf_record.VcfRecord('ref\t42\t.\tA\tG\t.\tPASS\tSVTYPE=SNP\n'),
+            vcf_record.VcfRecord('ref\t44\t.\tA\tC\t.\tPASS\tSVTYPE=SNP\n'),
+        ]
+
+        got = vcf_clusterer.VcfClusterer._expand_alts_in_vcf_record_list(vcf_records)
+        self.assertEqual(expected, got)
+
+
     def test_cluster_vcf_record_list(self):
         '''test _cluster_vcf_record_list'''
         record1 = vcf_record.VcfRecord('ref_42\t11\tid_1\tA\tG\t42.42\tPASS\tKMER=31;SVLEN=0;SVTYPE=SNP\tGT:COV:GT_CONF\t1/1:0,52:39.80')

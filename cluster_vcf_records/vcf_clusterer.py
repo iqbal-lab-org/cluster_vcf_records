@@ -97,6 +97,18 @@ class VcfClusterer:
 
 
     @classmethod
+    def _expand_alts_in_vcf_record_list(cls, vcf_records):
+        '''Input: list of vcf_records. Returns new list, where
+        any records with >ALT is replaced with one vcf record per ALT.
+        This doesn't change FORMAT or INFO columns, which means they
+        are now broken for those records'''
+        new_vcf_records = []
+        for record in vcf_records:
+            new_vcf_records.extend(record.to_record_per_alt())
+        return new_vcf_records
+
+
+    @classmethod
     def _cluster_vcf_record_list(cls, vcf_records, max_distance_between_variants=1):
         new_list = [vcf_record_cluster.VcfRecordCluster(max_distance_between_variants=max_distance_between_variants)]
 
