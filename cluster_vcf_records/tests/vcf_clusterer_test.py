@@ -110,7 +110,7 @@ class TestVcfClusterer(unittest.TestCase):
         ]
         ref_fasta = os.path.join(data_dir, 'run.gramtools_merge.ref.fa')
         tmp_out = 'tmp.vcf_clusterer.run.gramtools_merge.out.vcf'
-        clusterer = vcf_clusterer.VcfClusterer(vcf_files, ref_fasta, tmp_out, source='source_name')
+        clusterer = vcf_clusterer.VcfClusterer(vcf_files, ref_fasta, tmp_out, source='source_name', max_alleles_per_cluster=8)
         clusterer.run()
         expected_vcf = os.path.join(data_dir, 'run.gramtools_merge.out.vcf')
         self.assertTrue(filecmp.cmp(expected_vcf, tmp_out, shallow=False))
