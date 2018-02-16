@@ -106,7 +106,7 @@ class VcfRecordCluster:
             total_alleles_lower_bound *= len(x)
         total_alleles_lower_bound += len(non_snps)
 
-        if total_alleles_lower_bound > max_alleles:
+        if max_alleles is not None and total_alleles_lower_bound > max_alleles:
             return None
 
         for combination in itertools.product(*snp_nucleotides):
@@ -126,7 +126,7 @@ class VcfRecordCluster:
         except:
             pass
 
-        if len(alleles) > max_alleles:
+        if max_alleles is not None and len(alleles) > max_alleles:
             return None
         alleles = sorted(list(alleles))
         fields = [chrom_name, str(final_start + 1), '.', ref_seq_for_vcf,
