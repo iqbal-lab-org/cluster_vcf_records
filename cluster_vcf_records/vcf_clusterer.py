@@ -38,7 +38,8 @@ class VcfClusterer:
         '''
     def __init__(self, vcf_files, reference_fasta, vcf_outfile,
             max_distance_between_variants=1, homozygous_only=False, max_REF_len=None,
-            max_snps_per_cluster=None, source='cluster_vcf_records', merge_method='gramtools'):
+            max_snps_per_cluster=None, source='cluster_vcf_records', merge_method='gramtools',
+            max_gap_indel_rmdup=100):
         self.vcf_files = vcf_files
         self.reference_seqs = {}
         pyfastaq.tasks.file_to_dict(reference_fasta, self.reference_seqs)
@@ -51,6 +52,7 @@ class VcfClusterer:
         self.max_REF_len = max_REF_len
         self.max_snps_per_cluster = max_snps_per_cluster
         self.merge_method = merge_method
+        self.max_gap_indel_rmdup = max_gap_indel_rmdup
 
         allowed_merge_methods = {'gramtools', 'simple'}
         if self.merge_method not in {'gramtools', 'simple'}:
@@ -161,19 +163,22 @@ class VcfClusterer:
 
         for ref_name in sorted(vcf_records):
             ref_seq = self.reference_seqs[ref_name]
-            cluster_list = VcfClusterer._cluster_vcf_record_list(vcf_records[ref_name], max_distance_between_variants=self.max_distance_between_variants)
 
-            for cluster in cluster_list:
-                if self.merge_method == 'gramtools':
+            if self.merge_method == 'gramtools':
+                rmdup_list = VcfClusterer._expand_alts_and_remove_duplicates_in_list(vcf_records[ref_name], ref_seq, indel_gap=self.max_gap_indel_rmdup)
+                cluster_list = VcfClusterer._cluster_vcf_record_list(rmdup_list,  max_distance_between_variants=self.max_distance_between_variants)
+                for cluster in cluster_list:
                     clustered_vcf = cluster.make_one_merged_vcf_record_for_gramtools(ref_seq, max_snps=self.max_snps_per_cluster)
                     if clustered_vcf is not None:
                         print(clustered_vcf, file=f_out)
-                elif self.merge_method == 'simple':
+            elif self.merge_method == 'simple':
+                cluster_list = VcfClusterer._cluster_vcf_record_list(vcf_records[ref_name], max_distance_between_variants=self.max_distance_between_variants)
+                for cluster in cluster_list:
                     clustered_vcf = cluster.make_simple_merged_vcf_with_no_combinations(ref_seq)
                     for vcf in cluster.vcf_records:
                         print(vcf, file=f_out)
-                else:
-                    raise Error('merge_method "' + self.merge_method + '" not recognised. Cannot continue')
+            else:
+                raise Error('merge_method "' + self.merge_method + '" not recognised. Cannot continue')
 
         pyfastaq.utils.close(f_out)
 
