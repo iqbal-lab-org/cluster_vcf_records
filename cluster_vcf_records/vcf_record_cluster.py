@@ -179,5 +179,9 @@ class VcfRecordCluster:
             new_record.add_flanking_seqs(ref_seq, final_start_position, final_end_position)
             new_vcf_records.append(new_record)
 
+        # gramtools need the filter to be PASS
+        for record in new_vcf_records:
+            record.FILTER = 'PASS'
+
         return new_vcf_records
 

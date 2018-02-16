@@ -141,10 +141,13 @@ class TestVcfRecordCluster(unittest.TestCase):
         self.assertTrue(cluster.add_vcf_record(insertion))
 
         got = cluster.make_separate_indels_and_one_with_all_snps_no_combinations(ref_seq)
+        insertion.FILTER = 'PASS'
+        deletion.FILTER = 'PASS'
+
         insertion.add_flanking_seqs(ref_seq, 2, deletion.ref_end_pos())
         expected = [
             deletion,
             insertion,
-            vcf_record.VcfRecord('ref\t3\t.\tCTAGGTCA\tCAAGGTCA\t.\t.\t.'),
+            vcf_record.VcfRecord('ref\t3\t.\tCTAGGTCA\tCAAGGTCA\t.\tPASS\t.'),
         ]
         self.assertEqual(expected, got)
