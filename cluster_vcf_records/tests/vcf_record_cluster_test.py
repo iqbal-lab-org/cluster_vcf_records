@@ -127,3 +127,24 @@ class TestVcfRecordCluster(unittest.TestCase):
         expected = vcf_record.VcfRecord('ref\t3\t.\tCT\tCGA\t.\t.\tSVTYPE=MERGED\tGT\t1/1')
         self.assertEqual(expected, cluster[0])
 
+
+    def test_make_separate_indels_and_one_with_all_snps_no_combinations(self):
+        '''test make_separate_indels_and_one_with_all_snps_no_combinations'''
+        ref_seq = pyfastaq.sequences.Fasta('ref', 'AGCTAGGTCAG')
+        snp1 = vcf_record.VcfRecord('ref\t4\t.\tT\tA\t.\t.\t.\t.')
+        snp2 = vcf_record.VcfRecord('ref\t9\t.\tC\tG\t.\t.\t.\t.')
+        deletion = vcf_record.VcfRecord('ref\t3\t.\tCTAGGTCA\tG\t.\t.\t.\t.')
+        insertion = vcf_record.VcfRecord('ref\t5\t.\tA\tATT\t.\t.\t.\t.')
+        cluster = vcf_record_cluster.VcfRecordCluster(vcf_record=deletion, max_distance_between_variants=1)
+        self.assertTrue(cluster.add_vcf_record(snp1))
+        self.assertTrue(cluster.add_vcf_record(snp2))
+        self.assertTrue(cluster.add_vcf_record(insertion))
+
+        got = cluster.make_separate_indels_and_one_with_all_snps_no_combinations(ref_seq)
+        insertion.add_flanking_seqs(ref_seq, 2, deletion.ref_end_pos())
+        expected = [
+            deletion,
+            insertion,
+            vcf_record.VcfRecord('ref\t3\t.\tCTAGGTCA\tCAAGGTCA\t.\t.\t.'),
+        ]
+        self.assertEqual(expected, got)
