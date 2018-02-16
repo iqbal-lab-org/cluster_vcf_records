@@ -265,7 +265,13 @@ class VcfRecord:
         pos=42, ref=CAAA, alt=CAA
         pos=43, ref=AAA, alt=AA
         pos=44, ref=AA, alt=A'''
-        if self.is_snp() or other_record.is_snp() or self.CHROM != other_record.CHROM:
+        if self.CHROM != other_record.CHROM or len(self.ALT) > 1 or len(other_record.ALT) > 1 or self.is_snp() or other_record.is_snp():
+            return False
+
+        # The number of nuleotides that have been added or removed
+        # is a necessary condition of the indels being the same,
+        # so check that before devling into the actual sequences
+        if (len(self.REF) - len(self.ALT[0])) != (len(other_record.REF) - len(other_record.ALT[0])):
             return False
 
         # make records that start and end in the same place.
