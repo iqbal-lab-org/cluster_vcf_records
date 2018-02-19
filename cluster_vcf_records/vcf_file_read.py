@@ -7,11 +7,11 @@ from cluster_vcf_records import vcf_record
 
 class Error (Exception): pass
 
-def vcf_file_to_dict(infile, sort=True, homozygous_only=False, remove_asterisk_alts=False, max_REF_len=None, remove_useless_start_nucleotides=False):
+def vcf_file_to_dict(infile, sort=True, homozygous_only=False, remove_asterisk_alts=False, max_REF_len=None, remove_useless_start_nucleotides=False, min_SNP_qual=None, min_dp4=None, min_GT_conf=None):
     header_lines = []
     records = {}
     f = pyfastaq.utils.open_file_read(infile)
-    count_keys = ['keep', 'homozygous', 'REF_too_long', 'alt_is_asterisk']
+    count_keys = ['keep', 'not_homozygous', 'REF_too_long', 'alt_is_asterisk','SNP_qual_too_low','not_enough_high_qual_reads','GT_conf_too_low','samtools_indel','cortex_snp_call']
     counts = {x: 0 for x in count_keys}
 
     for line in f:
@@ -21,9 +21,38 @@ def vcf_file_to_dict(infile, sort=True, homozygous_only=False, remove_asterisk_a
 
         record = vcf_record.VcfRecord(line)
         if homozygous_only and record.FORMAT.get('GT', None) != '1/1':
-            counts['homozygous'] += 1
+            counts['not_homozygous'] += 1
             continue
-
+        
+        if min_GT_conf != None:
+            if record.QUAL == None:
+            
+                if record.INFO.get('SVTYPE') == 'SNP':      ##Clears out any cortex SNP calls
+                    counts['cortex_snp_call'] += 1
+                    continue
+            
+                if float(record.FORMAT.get('GT_CONF')) < min_GT_conf:   ##Filters based on cortex gt_conf
+                    counts['GT_conf_too_low'] += 1
+                    continue
+        
+            if record.QUAL != None:
+            
+                #if 'INDEL' in record.INFO:        ##Clears out any samtools indel calls
+                    #counts['samtools_indel'] += 1
+                    #continue
+            
+                if min_SNP_qual != None and record.QUAL < min_SNP_qual:    ##Filters based on samtools qual score
+                    counts['SNP_qual_too_low'] += 1
+                    continue
+            
+                if record.INFO.get('DP4') != None:          ##Filters for at least [] dp4 alt reads on both strands
+                    if min_dp4 != None:
+                        dp4_cov = record.INFO['DP4']
+                        cov_split = dp4_cov.split(',')
+                        if float(cov_split[2]) < min_dp4 or float(cov_split[3]) < min_dp4:
+                            counts['not_enough_high_qual_reads'] += 1
+                            continue
+        
         if remove_asterisk_alts:
             record.remove_asterisk_alts()
 
