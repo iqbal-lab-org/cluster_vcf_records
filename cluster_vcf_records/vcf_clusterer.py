@@ -58,7 +58,7 @@ class VcfClusterer:
 
 
     @classmethod
-    def _load_vcf_files(cls, filename_list, homozygous_only=False, max_REF_len=None, min_SNP_qual=None, mindp4=None, min_GT_conf=None):
+    def _load_vcf_files(cls, filename_list, homozygous_only=False, max_REF_len=None, min_SNP_qual=None, min_dp4=None, min_GT_conf=None):
         '''Loads all the vcf files from filename_list. Returns tuple of:
         1. Sample name. If more than one sample name found, uses the first one
         and warns to stderr
@@ -69,7 +69,7 @@ class VcfClusterer:
         sample_name = None
 
         for filename in filename_list:
-            headers[filename], new_records = vcf_file_read.vcf_file_to_dict(filename, homozygous_only=homozygous_only, remove_asterisk_alts=True, max_REF_len=max_REF_len, remove_useless_start_nucleotides=True)
+            headers[filename], new_records = vcf_file_read.vcf_file_to_dict(filename, homozygous_only=homozygous_only, remove_asterisk_alts=True, max_REF_len=max_REF_len, remove_useless_start_nucleotides=True, min_SNP_qual=min_SNP_qual, min_dp4=min_dp4, min_GT_conf=min_GT_conf)
 
             new_sample_name = vcf_file_read.get_sample_name_from_vcf_header_lines(headers[filename])
             if sample_name is None and new_sample_name is not None:
