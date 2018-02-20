@@ -58,7 +58,7 @@ class VcfClusterer:
 
 
     @classmethod
-    def _load_vcf_files(cls, filename_list, homozygous_only=False, max_REF_len=None):
+    def _load_vcf_files(cls, filename_list, homozygous_only=False, max_REF_len=None, min_SNP_qual=None, mindp4=None, min_GT_conf=None):
         '''Loads all the vcf files from filename_list. Returns tuple of:
         1. Sample name. If more than one sample name found, uses the first one
         and warns to stderr
