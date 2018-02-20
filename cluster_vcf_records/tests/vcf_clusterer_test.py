@@ -42,6 +42,42 @@ class TestVcfClusterer(unittest.TestCase):
         self.assertEqual(expected_records, got_records)
 
 
+    def test_expand_alts_in_vcf_record_list(self):
+        '''test _expand_alts_in_vcf_record_list'''
+        vcf_records = [
+            vcf_record.VcfRecord('ref\t42\t.\tA\tC,T\t.\tPASS\tSVTYPE=SNP\n'),
+            vcf_record.VcfRecord('ref\t42\t.\tA\tG\t.\tPASS\tSVTYPE=SNP\n'),
+            vcf_record.VcfRecord('ref\t44\t.\tA\tC\t.\tPASS\tSVTYPE=SNP\n'),
+        ]
+        expected = [
+            vcf_record.VcfRecord('ref\t42\t.\tA\tC\t.\tPASS\tSVTYPE=SNP\n'),
+            vcf_record.VcfRecord('ref\t42\t.\tA\tT\t.\tPASS\tSVTYPE=SNP\n'),
+            vcf_record.VcfRecord('ref\t42\t.\tA\tG\t.\tPASS\tSVTYPE=SNP\n'),
+            vcf_record.VcfRecord('ref\t44\t.\tA\tC\t.\tPASS\tSVTYPE=SNP\n'),
+        ]
+
+        got = vcf_clusterer.VcfClusterer._expand_alts_in_vcf_record_list(vcf_records)
+        self.assertEqual(expected, got)
+
+
+    def test_expand_alts_and_remove_duplicates_in_list(self):
+        '''test _expand_alts_and_remove_duplicates_in_list'''
+        #          123456789012345678901234567890
+        ref_seq = 'ACACTCGGGGGTAGTGCGCGCTGATGGCGA'
+        snp1 = vcf_record.VcfRecord('ref\t3\t.\tA\tG\t.\tPASS\tSVTYPE=SNP\n')
+        snp2 = vcf_record.VcfRecord('ref\t6\t.\tC\tG,T\t.\tPASS\tSVTYPE=SNP\n')
+        snp2_1 = vcf_record.VcfRecord('ref\t6\t.\tC\tG\t.\tPASS\tSVTYPE=SNP\n')
+        snp2_2 = vcf_record.VcfRecord('ref\t6\t.\tC\tT\t.\tPASS\tSVTYPE=SNP\n')
+        indel1 = vcf_record.VcfRecord('ref\t5\t.\tTCG\tTC\t.\tPASS\tSVTYPE=INDEL\n')
+        indel2 = vcf_record.VcfRecord('ref\t10\t.\tGG\tG\t.\tPASS\tSVTYPE=INDEL\n')
+        snp3 = vcf_record.VcfRecord('ref\t20\t.\tG\tA\t.\tPASS\tSVTYPE=SNP\n')
+        vcf_records = [snp1, indel1, snp2, indel2, snp3]
+        expected_gap4 = [snp1, indel1, snp2_1, snp2_2, snp3]
+        expected_gap2 = [snp1, indel1, snp2_1, snp2_2, indel2, snp3]
+        self.assertEqual(expected_gap2, vcf_clusterer.VcfClusterer._expand_alts_and_remove_duplicates_in_list(vcf_records, ref_seq, indel_gap=2))
+        self.assertEqual(expected_gap4, vcf_clusterer.VcfClusterer._expand_alts_and_remove_duplicates_in_list(vcf_records, ref_seq, indel_gap=4))
+
+
     def test_cluster_vcf_record_list(self):
         '''test _cluster_vcf_record_list'''
         record1 = vcf_record.VcfRecord('ref_42\t11\tid_1\tA\tG\t42.42\tPASS\tKMER=31;SVLEN=0;SVTYPE=SNP\tGT:COV:GT_CONF\t1/1:0,52:39.80')
