@@ -122,7 +122,6 @@ class VcfClusterer:
         indel more than once, but written in a different way (eg indel in
         homopolymer run can be put in >1 way in a VCF. Checks indels
         are the same within indel_gap nucleotides of each other'''
-        print('vcf_records in:', *vcf_records, sep='\n')
         expanded_vcf_records = VcfClusterer._expand_alts_in_vcf_record_list(vcf_records)
         new_vcf_records = [x for x in expanded_vcf_records if not x.is_snp()]
 
