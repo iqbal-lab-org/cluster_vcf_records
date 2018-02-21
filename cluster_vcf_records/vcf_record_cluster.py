@@ -39,7 +39,7 @@ class VcfRecordCluster:
             return min([x.POS for x in self.vcf_records]), max([x.ref_end_pos() for x in self.vcf_records])
 
 
-    def make_one_merged_vcf_record_for_gramtools(self, ref_seq, max_snps=None):
+    def make_one_merged_vcf_record_for_gramtools(self, ref_seq, max_alleles=5000):
         '''Returns one new VcfRecord that can be used as input to gramtools.
         It pads the reference if necessary, and lists all the variants
         (including all combinations of SNPs) in the ALT field of the
@@ -98,11 +98,15 @@ class VcfRecordCluster:
         ref_seq_for_vcf = ref_seq[final_start:final_end+1]
         alleles = set()
 
-        logging.debug('make_one_merged_vcf_record_for_gramtools() alleles from SNPs: ' + str(snp_nucleotides))
-        if max_snps is not None and len(snp_nucleotides) > max_snps:
-            logging.info('Skip cluster because too many (' + str(len(snp_nucleotides)) + ') SNPs. Max allowed is ' + str(max_snps))
-            for record in self.vcf_records:
-                logging.info('    SKIP RECORD: ' + str(record))
+        # work out min total alleles without making them. Making them could
+        # take a long time if too many! Can onnly put lower bound on
+        # the final unique number because all the combinations may have duplicates.
+        total_alleles_lower_bound = 1
+        for x in snp_nucleotides:
+            total_alleles_lower_bound *= len(x)
+        total_alleles_lower_bound += len(non_snps)
+
+        if max_alleles is not None and total_alleles_lower_bound > max_alleles:
             return None
 
         for combination in itertools.product(*snp_nucleotides):
@@ -122,6 +126,8 @@ class VcfRecordCluster:
         except:
             pass
 
+        if max_alleles is not None and len(alleles) > max_alleles:
+            return None
         alleles = sorted(list(alleles))
         fields = [chrom_name, str(final_start + 1), '.', ref_seq_for_vcf,
                   ','.join(alleles), '.', 'PASS', 'SVTYPE=COMPLEX']
@@ -147,4 +153,36 @@ class VcfRecordCluster:
 
         self.vcf_records = [merged_vcf_record]
 
+
+    def make_separate_indels_and_one_alt_with_all_snps_no_combinations(self, ref_seq):
+        '''Returns a VCF record, where each indel from this
+        cluster is in a separate ALT. Then all the remaining SNPs are
+        applied to make one ALT. If >1 SNP in same place, either one
+        might be used'''
+        final_start_position = min([x.POS for x in self.vcf_records])
+        final_end_position = max([x.ref_end_pos() for x in self.vcf_records])
+        snps = []
+        new_vcf_records = []
+
+        for record in self.vcf_records:
+            if record.is_snp():
+                snps.append(copy.copy(record))
+            else:
+                new_record = copy.copy(record)
+                new_record.add_flanking_seqs(ref_seq, final_start_position, final_end_position)
+                new_vcf_records.append(new_record)
+
+        if len(snps):
+            new_record = copy.copy(snps[0])
+            for snp in snps[1:]:
+                merged = new_record.merge(snp, ref_seq)
+                if merged is not None:
+                    new_record = merged
+            new_record.add_flanking_seqs(ref_seq, final_start_position, final_end_position)
+            new_vcf_records.append(new_record)
+
+        alts = ','.join([x.ALT[0] for x in new_vcf_records])
+        new_record = vcf_record.VcfRecord('\t'.join([self.vcf_records[0].CHROM, str(final_start_position + 1), '.', new_vcf_records[0].REF, alts, '.', 'PASS', '.']))
+
+        return new_record
 
