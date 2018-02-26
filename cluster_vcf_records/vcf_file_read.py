@@ -134,3 +134,18 @@ def get_sample_name_from_vcf_header_lines(header_lines):
 
     return None
 
+
+def vcf_file_has_at_least_one_record(infile):
+    f = pyfastaq.utils.open_file_read(infile)
+
+    for line in f:
+        if line.startswith('#'):
+            pass
+        else:
+            record = vcf_record.VcfRecord(line)
+            pyfastaq.utils.close(f)
+            return True
+
+    pyfastaq.utils.close(f)
+    return False
+

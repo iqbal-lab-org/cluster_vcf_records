@@ -85,3 +85,8 @@ class TestVcfFileRead(unittest.TestCase):
         lines[-1] = '#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tsample_name\tsample_name_2'
         self.assertEqual('sample_name', vcf_file_read.get_sample_name_from_vcf_header_lines(lines))
 
+
+    def test_vcf_file_has_at_least_one_record(self):
+        '''test vcf_file_has_at_least_one_record'''
+        self.assertTrue(vcf_file_read.vcf_file_has_at_least_one_record(os.path.join(data_dir, 'vcf_file_has_at_least_one_record.yes.vcf')))
+        self.assertFalse(vcf_file_read.vcf_file_has_at_least_one_record(os.path.join(data_dir, 'vcf_file_has_at_least_one_record.no.vcf')))
