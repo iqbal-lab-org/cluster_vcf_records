@@ -157,3 +157,10 @@ def get_header_lines_from_vcf_file(infile):
     return header_lines
 
 
+
+def get_sample_name_from_vcf_file(infile):
+    '''Assumes only one sample in the file.
+    Raises error if badly formatted #CHROM line.
+    Returns None if no #CHROM line found'''
+    header_lines =  get_header_lines_from_vcf_file(infile)
+    return get_sample_name_from_vcf_header_lines(header_lines)
