@@ -149,3 +149,11 @@ def vcf_file_has_at_least_one_record(infile):
     pyfastaq.utils.close(f)
     return False
 
+
+def get_header_lines_from_vcf_file(infile):
+    f = pyfastaq.utils.open_file_read(infile)
+    header_lines = [line.rstrip() for line in f if line.startswith('#')]
+    pyfastaq.utils.close(f)
+    return header_lines
+
+
