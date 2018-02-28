@@ -90,3 +90,29 @@ class TestVcfFileRead(unittest.TestCase):
         '''test vcf_file_has_at_least_one_record'''
         self.assertTrue(vcf_file_read.vcf_file_has_at_least_one_record(os.path.join(data_dir, 'vcf_file_has_at_least_one_record.yes.vcf')))
         self.assertFalse(vcf_file_read.vcf_file_has_at_least_one_record(os.path.join(data_dir, 'vcf_file_has_at_least_one_record.no.vcf')))
+
+
+    def test_get_header_lines_from_vcf_file(self):
+        '''test get_header_lines_from_vcf_file'''
+        vcf_with_header = os.path.join(data_dir, 'get_header_lines_from_vcf_file.with_header.vcf')
+        vcf_no_header = os.path.join(data_dir, 'get_header_lines_from_vcf_file.no_header.vcf')
+        got = vcf_file_read.get_header_lines_from_vcf_file(vcf_with_header)
+        expected = ['# header1', '# header2']
+        self.assertEqual(expected, got)
+        got = vcf_file_read.get_header_lines_from_vcf_file(vcf_no_header)
+        self.assertEqual([], got)
+
+
+    def test_get_sample_name_from_vcf_file(self):
+        '''test get_sample_name_from_vcf_file'''
+        vcf_no_chrom_line = os.path.join(data_dir, 'get_sample_name_from_vcf_file.no_chrom_line.vcf')
+        vcf_sample_42 = os.path.join(data_dir, 'get_sample_name_from_vcf_file.sample_42.vcf')
+        vcf_sample_42_43 = os.path.join(data_dir, 'get_sample_name_from_vcf_file.sample_42_and_43.vcf')
+        got = vcf_file_read.get_sample_name_from_vcf_file(vcf_no_chrom_line)
+        self.assertEqual(None, got)
+        got = vcf_file_read.get_sample_name_from_vcf_file(vcf_sample_42)
+        self.assertEqual('sample_42', got)
+        got = vcf_file_read.get_sample_name_from_vcf_file(vcf_sample_42_43)
+        self.assertEqual('sample_42', got)
+
+
