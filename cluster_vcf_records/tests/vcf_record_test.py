@@ -400,3 +400,42 @@ class TestVcfRecord(unittest.TestCase):
         got = vcf.split_into_snps()
         self.assertEqual(expect, got)
 
+        vcf = vcf_record.VcfRecord('ref\t15\t.\tATGC\tGTGG,ATAA,GTGG,ATGG\t.\tPASS\tSVTYPE=SNP\tGT\t0/0\n')
+        snp1 = vcf_record.VcfRecord('ref\t15\t.\tA\tG\t.\tPASS\tSVTYPE=SNP\tGT\t0/0\n')
+        snp2 = vcf_record.VcfRecord('ref\t17\t.\tG\tA\t.\tPASS\tSVTYPE=SNP\tGT\t0/0\n')
+        snp3 = vcf_record.VcfRecord('ref\t18\t.\tC\tA,G\t.\tPASS\tSVTYPE=SNP\tGT\t0/0\n')
+        expect = [snp1, snp2, snp3]
+        got = vcf.split_into_snps()
+        self.assertEqual(expect, got)
+
+        vcf = vcf_record.VcfRecord('ref\t15\t.\tATGC\tGTGG,ATAA,GTGG,ATGG\t.\tPASS\tSVTYPE=SNP\tGT\t0/1\n')
+        snp1 = vcf_record.VcfRecord('ref\t15\t.\tA\tG\t.\tPASS\tSVTYPE=SNP\tGT\t0/1\n')
+        snp2 = vcf_record.VcfRecord('ref\t17\t.\tG\tA\t.\tPASS\tSVTYPE=SNP\tGT\t0/0\n')
+        snp3 = vcf_record.VcfRecord('ref\t18\t.\tC\tA,G\t.\tPASS\tSVTYPE=SNP\tGT\t0/2\n')
+        expect = [snp1, snp2, snp3]
+        got = vcf.split_into_snps()
+        self.assertEqual(expect, got)
+
+        vcf = vcf_record.VcfRecord('ref\t15\t.\tATGC\tGTGG,ATAA,GTGG,ATGG\t.\tPASS\tSVTYPE=SNP\tGT\t0/2\n')
+        snp1 = vcf_record.VcfRecord('ref\t15\t.\tA\tG\t.\tPASS\tSVTYPE=SNP\tGT\t0/0\n')
+        snp2 = vcf_record.VcfRecord('ref\t17\t.\tG\tA\t.\tPASS\tSVTYPE=SNP\tGT\t0/1\n')
+        snp3 = vcf_record.VcfRecord('ref\t18\t.\tC\tA,G\t.\tPASS\tSVTYPE=SNP\tGT\t0/1\n')
+        expect = [snp1, snp2, snp3]
+        got = vcf.split_into_snps()
+        self.assertEqual(expect, got)
+
+        vcf = vcf_record.VcfRecord('ref\t15\t.\tATGC\tGTGG,ATAA,GTGG,ATGG\t.\tPASS\tSVTYPE=SNP\tGT\t1/2\n')
+        snp1 = vcf_record.VcfRecord('ref\t15\t.\tA\tG\t.\tPASS\tSVTYPE=SNP\tGT\t0/1\n')
+        snp2 = vcf_record.VcfRecord('ref\t17\t.\tG\tA\t.\tPASS\tSVTYPE=SNP\tGT\t0/1\n')
+        snp3 = vcf_record.VcfRecord('ref\t18\t.\tC\tA,G\t.\tPASS\tSVTYPE=SNP\tGT\t1/2\n')
+        expect = [snp1, snp2, snp3]
+        got = vcf.split_into_snps()
+        self.assertEqual(expect, got)
+
+        vcf = vcf_record.VcfRecord('ref\t15\t.\tATGC\tGTGA,ATAA,GTGG,ATGG\t.\tPASS\tSVTYPE=SNP\tGT\t1/2\n')
+        snp1 = vcf_record.VcfRecord('ref\t15\t.\tA\tG\t.\tPASS\tSVTYPE=SNP\tGT\t0/1\n')
+        snp2 = vcf_record.VcfRecord('ref\t17\t.\tG\tA\t.\tPASS\tSVTYPE=SNP\tGT\t0/1\n')
+        snp3 = vcf_record.VcfRecord('ref\t18\t.\tC\tA,G\t.\tPASS\tSVTYPE=SNP\tGT\t0/1\n')
+        expect = [snp1, snp2, snp3]
+        got = vcf.split_into_snps()
+        self.assertEqual(expect, got)

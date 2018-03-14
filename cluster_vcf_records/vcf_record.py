@@ -301,12 +301,19 @@ class VcfRecord:
         this record into separate SNPs. eg if
         REF=ACGT and ALT=AGGA, then two SNPs
         C->G and T->A. Throws away all information in the
-        INFO and FORMAT fields'''
+        INFO and FORMAT fields, except outputs the
+        correct genotype (GT) if present in the input'''
         allele_lengths = set([len(x) for x in self.ALT])
         allele_lengths.add(len(self.REF))
 
         if len(allele_lengths) > 1 or allele_lengths == {1}:
             return [self]
+
+        if self.FORMAT is not None and 'GT' in self.FORMAT:
+            has_gt = True
+            genotype_alleles = set([int(x) for x in self.FORMAT['GT'].split('/')])
+        else:
+            has_gt = False
 
         new_snps = {}
 
@@ -314,9 +321,14 @@ class VcfRecord:
             for i in range(len(self.REF)):
                 if self.REF[i] != allele[i]:
                     if i not in new_snps:
-                        new_snps[i] = {'ref': self.REF[i], 'alts': set()}
+                        new_snps[i] = {'ref': self.REF[i], 'alts': {}}
                     assert new_snps[i]['ref'] == self.REF[i]
-                    new_snps[i]['alts'].add(allele[i])
+                    if allele[i] not in new_snps[i]['alts']:
+                        new_snps[i]['alts'][allele[i]] = set()
+
+                    if has_gt:
+                        new_snps[i]['alts'][allele[i]].update(genotype_alleles.intersection({allele_index + 1}))
+
 
         new_vcfs = []
 
@@ -326,11 +338,32 @@ class VcfRecord:
                 str(self.POS + position_in_REF + 1),
                 '.',
                 allele_dict['ref'],
-                ','.join(sorted(list(allele_dict['alts']))),
+                ','.join(sorted(list(allele_dict['alts'].keys()))),
                 '.',
                 'PASS',
                 'SVTYPE=SNP',
             ])))
+
+            if has_gt:
+                if genotype_alleles == {0}:
+                    gt = '0/0'
+                else:
+                    x = [len(allele_dict['alts'][x]) for x in sorted(allele_dict['alts'])]
+                    matching_alleles = set([i+1 for i in range(len(x)) if x[i] > 0])
+
+                    if len(matching_alleles) == 0:
+                        gt = '0/0'
+                    elif len(matching_alleles) == 1:
+                        allele = matching_alleles.pop()
+                        if len(genotype_alleles) == 1:
+                            gt = str(allele) + '/' + str(allele)
+                        else:
+                            gt = '0/' + str(allele)
+                    else:
+                        assert len(matching_alleles) == 2
+                        gt = '/'.join(sorted([str(x) for x in matching_alleles]))
+
+                new_vcfs[-1].set_format_key_value('GT', gt)
 
         return new_vcfs
 
