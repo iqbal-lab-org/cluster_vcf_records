@@ -295,3 +295,42 @@ class VcfRecord:
             record_list[-1].ALT = [alt]
         return record_list
 
+
+    def split_into_snps(self):
+        '''Returns list of vcf_records. Tries to split
+        this record into separate SNPs. eg if
+        REF=ACGT and ALT=AGGA, then two SNPs
+        C->G and T->A. Throws away all information in the
+        INFO and FORMAT fields'''
+        allele_lengths = set([len(x) for x in self.ALT])
+        allele_lengths.add(len(self.REF))
+
+        if len(allele_lengths) > 1 or allele_lengths == {1}:
+            return [self]
+
+        new_snps = {}
+
+        for allele_index, allele in enumerate(self.ALT):
+            for i in range(len(self.REF)):
+                if self.REF[i] != allele[i]:
+                    if i not in new_snps:
+                        new_snps[i] = {'ref': self.REF[i], 'alts': set()}
+                    assert new_snps[i]['ref'] == self.REF[i]
+                    new_snps[i]['alts'].add(allele[i])
+
+        new_vcfs = []
+
+        for position_in_REF, allele_dict in sorted(new_snps.items()):
+            new_vcfs.append(VcfRecord('\t'.join([
+                self.CHROM,
+                str(self.POS + position_in_REF + 1),
+                '.',
+                allele_dict['ref'],
+                ','.join(sorted(list(allele_dict['alts']))),
+                '.',
+                'PASS',
+                'SVTYPE=SNP',
+            ])))
+
+        return new_vcfs
+
