@@ -7,11 +7,9 @@ specifically for those projects and no others.
 ## Installation
 
 ### With pip3
-
     pip3 install cluster_vcf_records
 
 ### From source
-
 Download the latest release (or git clone). First check the
 tests pass:
 
@@ -23,7 +21,6 @@ and then install:
 
 
 ## Synopsis
-
 To cluster one or more VCF files:
 
 ```
@@ -37,3 +34,5 @@ clusterer.run()
 For more explanation and a description of optional arguments,
 see `help(cluster_vcf_records.vcf_clusterer.VcfClusterer)`
 
+# License
+MIT
