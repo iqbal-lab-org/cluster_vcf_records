@@ -4,21 +4,8 @@
 Python3 package to cluster VCF records. Used by gramtools and minos - written
 specifically for those projects and no others.
 
-## Installation
-
-### With pip3
-    pip3 install cluster_vcf_records
-
-### From source
-Download the latest release (or git clone). First check the
-tests pass:
-
-    python3 setup.py test
-
-and then install:
-
-    python3 setup.py install
-
+## Install
+    pip3 install wheel cluster_vcf_records
 
 ## Synopsis
 To cluster one or more VCF files:
