@@ -14,3 +14,4 @@ __all__ = [
 ]
 
 from cluster_vcf_records import *
+from .vcf_clusterer import cluster

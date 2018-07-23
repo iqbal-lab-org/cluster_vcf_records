@@ -1,3 +1,4 @@
+import typing
 import logging
 import operator
 
@@ -5,7 +6,6 @@ import pyfastaq
 
 from cluster_vcf_records import vcf_file_read, vcf_record_cluster
 
-class Error (Exception): pass
 
 class VcfClusterer:
     '''Class to cluster one (or more) VCF files. Records in the VCf files
@@ -59,7 +59,7 @@ class VcfClusterer:
 
         allowed_merge_methods = {'gramtools', 'simple'}
         if self.merge_method not in {'gramtools', 'simple'}:
-            raise Error('Erro! merge_method "' + self.merge_method + '" not allowed. Must be one of: ' + ','.join(sorted(list(allowed_merge_methods))))
+            raise RuntimeError('Erro! merge_method "' + self.merge_method + '" not allowed. Must be one of: ' + ','.join(sorted(list(allowed_merge_methods))))
 
 
     @classmethod
@@ -180,7 +180,11 @@ class VcfClusterer:
                     for vcf in cluster.vcf_records:
                         print(vcf, file=f_out)
             else:
-                raise Error('merge_method "' + self.merge_method + '" not recognised. Cannot continue')
+                raise RuntimeError('merge_method "' + self.merge_method + '" not recognised. Cannot continue')
 
         pyfastaq.utils.close(f_out)
 
+
+def cluster(input_vcf_file_paths: typing.List[str], reference_file_path: str, output_vcf_file_path: str, **kw):
+    _vcf_cluster = VcfClusterer(input_vcf_file_paths, reference_file_path,  output_vcf_file_path, **kw)
+    return _vcf_cluster.run()

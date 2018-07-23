@@ -1,25 +1,24 @@
 [![Build Status](https://travis-ci.org/iqbal-lab-org/cluster_vcf_records.svg?branch=master)](https://travis-ci.org/iqbal-lab-org/cluster_vcf_records)
 
 # cluster_vcf_records
-Python3 package to cluster VCF records. Used by gramtools and minos - written
-specifically for those projects and no others.
+Python3 package to cluster overlapping VCF records.
+
+Used by gramtools and minos - written specifically for those projects and no others.
 
 ## Install
     pip3 install wheel cluster_vcf_records
 
-## Synopsis
-To cluster one or more VCF files:
-
-```
+## Usage
+```python
 import cluster_vcf_records
-vcf_files = ['spam.vcf', 'eggs.vcf', 'shrubbery.vcf']
-clusterer = cluster_vcf_records.vcf_clusterer.VcfClusterer(vcf_files,
-   'reference.fasta',  'out.clustered.vcf')
-clusterer.run()
+
+input_vcf_file_paths = ['spam.vcf', 'eggs.vcf']
+cluster_vcf_records.cluster(input_vcf_file_paths,
+                            'reference.fasta',
+                            'clustered_output.vcf')
 ```
 
-For more explanation and a description of optional arguments,
-see `help(cluster_vcf_records.vcf_clusterer.VcfClusterer)`
+For further information and a description of optional arguments, see `help(cluster_vcf_records.vcf_clusterer.VcfClusterer)`
 
 # License
 MIT
