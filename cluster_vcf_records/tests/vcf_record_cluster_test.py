@@ -92,6 +92,18 @@ class TestVcfRecordCluster(unittest.TestCase):
         self.assertEqual(expected, cluster.make_one_merged_vcf_record_for_gramtools(ref_seq))
 
 
+    def test_record_with_zero_pos_valueerror_raised(self):
+        ref_seq = 'AGCTATCTGCGTATTCGATC'
+        record_1 = vcf_record.VcfRecord('ref\t0\t.\tC\tCG\t42.42\tPASS\tSVTPYPE=INDEL\tGT\t1/1')
+        record_2 = vcf_record.VcfRecord('ref\t1\t.\tT\tA\t42.42\tPASS\tSVTPYPE=SNP\tGT\t1/1')
+
+        cluster = vcf_record_cluster.VcfRecordCluster(vcf_record=record_1, max_distance_between_variants=1)
+        cluster.add_vcf_record(record_2)
+
+        with self.assertRaises(ValueError):
+            cluster.make_one_merged_vcf_record_for_gramtools(ref_seq)
+
+
     def test_make_simple_merged_vcf_with_no_combinations(self):
         '''test make_simple_merged_vcf_with_no_combinations'''
         ref_seq = pyfastaq.sequences.Fasta('ref', 'AGCTAGGTCAG')

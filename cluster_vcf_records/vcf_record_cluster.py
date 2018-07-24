@@ -112,6 +112,8 @@ class VcfRecordCluster:
         for combination in itertools.product(*snp_nucleotides):
             alt_seq = list(ref_seq_for_vcf)
             for i, position in enumerate(snp_positions):
+                if position < 1:
+                    raise ValueError("POS value (%d) less than 1. Ensure VCF is valid." % position)
                 alt_seq[position - final_start] = combination[i]
             alleles.add(''.join(alt_seq))
             for non_snp_pos, non_snp_ref, non_snp_alt in non_snps:
