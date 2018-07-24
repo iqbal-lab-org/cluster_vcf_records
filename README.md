@@ -1,7 +1,7 @@
 [![Build Status](https://travis-ci.org/iqbal-lab-org/cluster_vcf_records.svg?branch=master)](https://travis-ci.org/iqbal-lab-org/cluster_vcf_records)
 
 # cluster_vcf_records
-Python3 package to cluster overlapping VCF records.
+Python3 package to cluster VCF records.
 
 Used by gramtools and minos - written specifically for those projects and no others.
 
