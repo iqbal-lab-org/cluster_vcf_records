@@ -188,7 +188,7 @@ class VcfRecord:
             if len(called_alleles) != 1 or '.' in called_alleles:
                 return None
 
-            if int(called_alleles[0]) > 1:
+            if int(float((called_alleles[0]))) > 1:
                 alt_seq.append(record.ALT[called_alleles[0]-1])
                 print("append alt")
                 print(called_alleles[0]-1)
