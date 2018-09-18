@@ -177,16 +177,22 @@ class VcfRecord:
             assert record.REF != '.' and record.ALT[0] != '.'
             alt_seq.append(reference_seq[current_ref_pos:record.POS])
             if record.FORMAT is None or 'GT' not in record.FORMAT:
+                print("no gt")
                 return None
 
             called_alleles = list(set(record.FORMAT['GT'].split('/')))
             if len(called_alleles) != 1 or '.' in called_alleles:
+                print("called alleles")
+                print(called_alleles)
                 return None
 
-            if (int(called_alleles[0]) > 1):
+            if int(called_alleles[0]) > 1:
                 alt_seq.append(record.ALT[called_alleles[0]-1])
+                print("append alt")
+                print(called_alleles[0]-1)
             else:
                 alt_seq.append(record.REF)
+                print("append ref")
             current_ref_pos += len(record.REF)
 
 
