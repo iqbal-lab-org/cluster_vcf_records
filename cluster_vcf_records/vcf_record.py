@@ -175,6 +175,8 @@ class VcfRecord:
         current_ref_pos = ref_start
 
         for record in sorted_records:
+            print("record")
+            print(record)
             assert record.REF != '.' and record.ALT[0] != '.'
             alt_seq.append(reference_seq[current_ref_pos:record.POS])
             if record.FORMAT is None or 'GT' not in record.FORMAT:
