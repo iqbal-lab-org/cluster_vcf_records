@@ -188,7 +188,7 @@ class VcfRecord:
             if len(called_alleles) != 1 or '.' in called_alleles:
                 return None
 
-            if int(float((called_alleles[0]))) > 1:
+            if int(called_alleles[0]) > 0:
                 alt_seq.append(record.ALT[called_alleles[0]-1])
                 print("append alt")
                 print(called_alleles[0]-1)
@@ -198,7 +198,7 @@ class VcfRecord:
             all_alt_seq.append(record.ALT[0])
             current_ref_pos += len(record.REF)
 
-        if (ref_seq_for_vcf != ''.join(alt_seq)):
+        if ref_seq_for_vcf != ''.join(alt_seq):
             return VcfRecord('\t'.join([
                 self.CHROM,
                 str(ref_start + 1),
