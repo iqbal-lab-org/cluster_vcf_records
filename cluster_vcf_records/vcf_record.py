@@ -171,6 +171,7 @@ class VcfRecord:
         ref_seq_for_vcf = reference_seq[ref_start:ref_end + 1]
         sorted_records = sorted([self, other], key=operator.attrgetter('POS'))
         alt_seq = []
+        all_alt_seq = []
         current_ref_pos = ref_start
 
         for record in sorted_records:
@@ -181,9 +182,8 @@ class VcfRecord:
                 return None
 
             called_alleles = list(set(record.FORMAT['GT'].split('/')))
+            print(called_alleles)
             if len(called_alleles) != 1 or '.' in called_alleles:
-                print("called alleles")
-                print(called_alleles)
                 return None
 
             if int(called_alleles[0]) > 1:
@@ -193,18 +193,29 @@ class VcfRecord:
             else:
                 alt_seq.append(record.REF)
                 print("append ref")
+            all_alt_seq.append(record.ALT[0])
             current_ref_pos += len(record.REF)
 
-
-        return VcfRecord('\t'.join([
-            self.CHROM,
-            str(ref_start + 1),
-            '.',
-            ref_seq_for_vcf,
-            ''.join(alt_seq),
-            '.', '.', 'SVTYPE=MERGED',
-            'GT', '1/1',
-        ]))
+        if (ref_seq_for_vcf != ''.join(alt_seq)):
+            return VcfRecord('\t'.join([
+                self.CHROM,
+                str(ref_start + 1),
+                '.',
+                ref_seq_for_vcf,
+                ''.join(alt_seq),
+                '.', '.', 'SVTYPE=MERGED',
+                'GT', '1/1',
+            ]))
+        else:
+            return VcfRecord('\t'.join([
+                self.CHROM,
+                str(ref_start + 1),
+                '.',
+                ref_seq_for_vcf,
+                ''.join(all_alt_seq),
+                '.', '.', 'SVTYPE=MERGED',
+                'GT', '0/0',
+            ]))
 
 
     def add_flanking_seqs(self, ref_seq, new_start, new_end):

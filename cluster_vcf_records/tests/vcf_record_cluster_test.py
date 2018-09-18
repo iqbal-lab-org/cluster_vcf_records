@@ -174,6 +174,19 @@ class TestVcfRecordCluster(unittest.TestCase):
         expected = vcf_record.VcfRecord('ref\t2\t.\tGCTAGGT\tGCATTAGGT\t.\t.\tSVTYPE=MERGED\tGT\t1/1')
         self.assertEqual(expected, cluster[0])
 
+        # test where all calls are ref
+        ref_seq = pyfastaq.sequences.Fasta('ref', 'AGCTAGGTCAG')
+        record1 = vcf_record.VcfRecord('ref\t2\t.\tG\tAA\t228\t.\tINDEL;IDV=54;IMF=0.885246;DP=61;VDB=7.33028e-19;SGB=-0.693147;MQSB=0.9725;MQ0F=0;AC=2;AN=2;DP4=0,0,23,31;MQ=57\tGT:PL\t0/0:255,163,0')
+        record2 = vcf_record.VcfRecord('ref\t3\t.\tC\tCAT\t21.4018\t.\tINDEL;IDV=2;IMF=0.0338983;DP=59;VDB=0.18;SGB=-0.453602;MQ0F=0;AC=2;AN=2;DP4=0,0,0,2;MQ=60\tGT:PL\t0/0:48,6,0')
+        record3 = vcf_record.VcfRecord('ref\t8\t.\tT\tA\t21.4018\t.\t.\tSVTYPE=MERGED\tGT\t0/0')
+        cluster = vcf_record_cluster.VcfRecordCluster(vcf_record=record1)
+        self.assertTrue(cluster.add_vcf_record(record2))
+        self.assertTrue(cluster.add_vcf_record(record3))
+        cluster.make_simple_gt_aware_merged_vcf_with_no_combinations(ref_seq)
+        self.assertEqual(1, len(cluster))
+        expected = vcf_record.VcfRecord('ref\t2\t.\tGCTAGGT\tAACATTAGGA\t.\t.\tSVTYPE=MERGED\tGT\t0/0')
+        self.assertEqual(expected, cluster[0])
+
         # Test insertion next to SNP
         # (same example as in test_make_one_merged_vcf_record_for_gramtools,
         # byt now we don't get combinations, just the two ALT changes from
