@@ -175,34 +175,24 @@ class VcfRecord:
         current_ref_pos = ref_start
 
         for record in sorted_records:
-            print("record")
-            print(record)
             assert record.REF != '.' and record.ALT[0] != '.'
             alt_seq.append(reference_seq[current_ref_pos:record.POS])
             all_alt_seq.append(reference_seq[current_ref_pos:record.POS])
             if record.FORMAT is None or 'GT' not in record.FORMAT:
-                print("no gt")
                 return None
 
             called_alleles = list(set(record.FORMAT['GT'].split('/')))
-            print(called_alleles)
             if len(called_alleles) != 1 or '.' in called_alleles:
                 return None
             gt = int(called_alleles[0])
             if gt > 0:
                 alt_seq.append(record.ALT[gt-1])
-                print("append alt")
-                print(gt-1)
             else:
                 alt_seq.append(record.REF)
-                print("append ref")
             all_alt_seq.append(record.ALT[0])
             current_ref_pos += len(record.REF)
 
-        print(ref_seq_for_vcf)
         alt_seq_for_vcf = ''.join(alt_seq)
-        print(alt_seq_for_vcf)
-        print(ref_seq_for_vcf == alt_seq_for_vcf)
         if ref_seq_for_vcf == alt_seq_for_vcf:
             return VcfRecord('\t'.join([
                 self.CHROM,
