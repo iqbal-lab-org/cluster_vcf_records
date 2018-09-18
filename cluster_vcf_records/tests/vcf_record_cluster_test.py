@@ -151,7 +151,7 @@ class TestVcfRecordCluster(unittest.TestCase):
         self.assertTrue(cluster.add_vcf_record(record3))
         cluster.make_simple_gt_aware_merged_vcf_with_no_combinations(ref_seq)
         self.assertEqual(1, len(cluster))
-        expected = vcf_record.VcfRecord('ref\t2\t.\tGCTAGGT\tAACTAGGA\t.\tSVTYPE=MERGED\tGT\t1/1')
+        expected = vcf_record.VcfRecord('ref\t2\t.\tGCTAGGT\tAACTAGGA\t.\t.\tSVTYPE=MERGED\tGT\t1/1')
         self.assertEqual(expected, cluster[0])
 
         # add in record 1 again, then try merging. The merging should not work
@@ -171,7 +171,7 @@ class TestVcfRecordCluster(unittest.TestCase):
         self.assertTrue(cluster.add_vcf_record(record3))
         cluster.make_simple_gt_aware_merged_vcf_with_no_combinations(ref_seq)
         self.assertEqual(1, len(cluster))
-        expected = vcf_record.VcfRecord('ref\t2\t.\tGCTAGGT\tGCATTAGGT\t.\tSVTYPE=MERGED\tGT\t1/1')
+        expected = vcf_record.VcfRecord('ref\t2\t.\tGCTAGGT\tGCATTAGGT\t.\t.\tSVTYPE=MERGED\tGT\t1/1')
         self.assertEqual(expected, cluster[0])
 
         # test where all calls are ref
@@ -184,7 +184,7 @@ class TestVcfRecordCluster(unittest.TestCase):
         self.assertTrue(cluster.add_vcf_record(record3))
         cluster.make_simple_gt_aware_merged_vcf_with_no_combinations(ref_seq)
         self.assertEqual(1, len(cluster))
-        expected = vcf_record.VcfRecord('ref\t2\t.\tGCTAGGT\tAACATTAGGA\t.\tSVTYPE=MERGED\tGT\t0/0')
+        expected = vcf_record.VcfRecord('ref\t2\t.\tGCTAGGT\tAACATTAGGA\t.\t.\tSVTYPE=MERGED\tGT\t0/0')
         self.assertEqual(expected, cluster[0])
 
         # Test insertion next to SNP
@@ -198,7 +198,7 @@ class TestVcfRecordCluster(unittest.TestCase):
         self.assertTrue(cluster.add_vcf_record(record2))
         cluster.make_simple_gt_aware_merged_vcf_with_no_combinations(ref_seq)
         self.assertEqual(1, len(cluster))
-        expected = vcf_record.VcfRecord('ref\t3\t.\tCT\tCGA\t.\tSVTYPE=MERGED\tGT\t1/1')
+        expected = vcf_record.VcfRecord('ref\t3\t.\tCT\tCGA\t.\t.\tSVTYPE=MERGED\tGT\t1/1')
         self.assertEqual(expected, cluster[0])
 
 
