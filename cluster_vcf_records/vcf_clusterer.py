@@ -57,9 +57,9 @@ class VcfClusterer:
         self.merge_method = merge_method
         self.max_gap_indel_rmdup = max_gap_indel_rmdup
 
-        allowed_merge_methods = {'gramtools', 'simple'}
-        if self.merge_method not in {'gramtools', 'simple'}:
-            raise RuntimeError('Erro! merge_method "' + self.merge_method + '" not allowed. Must be one of: ' + ','.join(sorted(list(allowed_merge_methods))))
+        allowed_merge_methods = {'gramtools', 'simple', 'gt_aware'}
+        if self.merge_method not in {'gramtools', 'simple', 'gt_aware'}:
+            raise RuntimeError('Error! merge_method "' + self.merge_method + '" not allowed. Must be one of: ' + ','.join(sorted(list(allowed_merge_methods))))
 
 
     @classmethod
@@ -177,6 +177,12 @@ class VcfClusterer:
                 cluster_list = VcfClusterer._cluster_vcf_record_list(vcf_records[ref_name], max_distance_between_variants=self.max_distance_between_variants)
                 for cluster in cluster_list:
                     clustered_vcf = cluster.make_simple_merged_vcf_with_no_combinations(ref_seq)
+                    for vcf in cluster.vcf_records:
+                        print(vcf, file=f_out)
+            elif self.merge_method == 'gt_aware':
+                cluster_list = VcfClusterer._cluster_vcf_record_list(vcf_records[ref_name], max_distance_between_variants=self.max_distance_between_variants)
+                for cluster in cluster_list:
+                    clustered_vcf = cluster.make_simple_gt_aware_merged_vcf_with_no_combinations(ref_seq)
                     for vcf in cluster.vcf_records:
                         print(vcf, file=f_out)
             else:

@@ -135,3 +135,17 @@ class TestVcfClusterer(unittest.TestCase):
         expected_vcf = os.path.join(data_dir, 'run.simple_merge.out.vcf')
         self.assertTrue(filecmp.cmp(expected_vcf, tmp_out, shallow=False))
         os.unlink(tmp_out)
+
+    def test_run_gt_aware_merge(self):
+        '''test run using merge_method gt_aware'''
+        vcf_files = [
+            os.path.join(data_dir, 'run.gt_aware_merge.1.vcf'),
+            os.path.join(data_dir, 'run.gt_aware_merge.2.vcf'),
+        ]
+        ref_fasta = os.path.join(data_dir, 'run.gt_aware_merge.ref.fa')
+        tmp_out = 'tmp.vcf_clusterer.run.gt_aware_merge.out.vcf'
+        clusterer = vcf_clusterer.VcfClusterer(vcf_files, ref_fasta, tmp_out, source='source_name', merge_method='gt_aware')
+        clusterer.run()
+        expected_vcf = os.path.join(data_dir, 'run.gt_aware_merge.out.vcf')
+        self.assertTrue(filecmp.cmp(expected_vcf, tmp_out, shallow=False))
+        os.unlink(tmp_out)
