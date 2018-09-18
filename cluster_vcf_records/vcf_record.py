@@ -152,6 +152,54 @@ class VcfRecord:
             'GT', '1/1',
         ]))
 
+    def gt_aware_merge(self, other, reference_seq):
+        '''Tries to merge this VcfRecord with other VcfRecord always using called allele as alt.
+        Simple example (working in 0-based coords):
+        ref = ACGT
+        var1 = SNP at position 1, C->G called alt
+        var2 = SNP at position 3, T->A called ref
+        then this returns new variant, position=1, REF=CGT, ALT=GGT.
+
+        If there is any kind of conflict, eg two SNPs in same position, then
+        returns None.
+        Also assumes there is only one ALT, otherwise returns None.'''
+        if self.CHROM != other.CHROM or self.intersects(other) or len(self.ALT) != 1 or len(other.ALT) != 1:
+            return None
+
+        ref_start = min(self.POS, other.POS)
+        ref_end = max(self.ref_end_pos(), other.ref_end_pos())
+        ref_seq_for_vcf = reference_seq[ref_start:ref_end + 1]
+        sorted_records = sorted([self, other], key=operator.attrgetter('POS'))
+        alt_seq = []
+        current_ref_pos = ref_start
+
+        for record in sorted_records:
+            assert record.REF != '.' and record.ALT[0] != '.'
+            alt_seq.append(reference_seq[current_ref_pos:record.POS])
+            if record.FORMAT is None or 'GT' not in record.FORMAT:
+                return None
+
+            called_alleles = list(set(record.FORMAT['GT'].split('/')))
+            if len(called_alleles) != 1 or '.' in called_alleles:
+                return None
+
+            if (called_alleles[0] > 1):
+                alt_seq.append(record.ALT[called_alleles[0]-1])
+            else:
+                alt_seq.append(record.REF)
+            current_ref_pos += len(record.REF)
+
+
+        return VcfRecord('\t'.join([
+            self.CHROM,
+            str(ref_start + 1),
+            '.',
+            ref_seq_for_vcf,
+            ''.join(alt_seq),
+            '.', '.', 'SVTYPE=MERGED',
+            'GT', '1/1',
+        ]))
+
 
     def add_flanking_seqs(self, ref_seq, new_start, new_end):
         '''Adds new_start many nucleotides at the start, and new_end many nucleotides

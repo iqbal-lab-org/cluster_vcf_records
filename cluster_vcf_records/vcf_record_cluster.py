@@ -155,6 +155,24 @@ class VcfRecordCluster:
 
         self.vcf_records = [merged_vcf_record]
 
+    def make_simple_gt_aware_merged_vcf_with_no_combinations(self, ref_seq):
+        '''Does a simple merging of all variants in this cluster.
+        Assumes one ALT in each variant. Uses the called allele for each
+        variant, making one new vcf_record that has all the variants
+        put together'''
+        if len(self) <= 1:
+            return
+
+        merged_vcf_record = self.vcf_records[0]
+
+        for i in range(1, len(self.vcf_records), 1):
+            if self.vcf_records[i].intersects(merged_vcf_record):
+                return
+            else:
+                merged_vcf_record = merged_vcf_record.gt_aware_merge(self.vcf_records[i], ref_seq)
+
+        self.vcf_records = [merged_vcf_record]
+
 
     def make_separate_indels_and_one_alt_with_all_snps_no_combinations(self, ref_seq):
         '''Returns a VCF record, where each indel from this
