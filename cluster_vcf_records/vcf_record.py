@@ -179,6 +179,7 @@ class VcfRecord:
             print(record)
             assert record.REF != '.' and record.ALT[0] != '.'
             alt_seq.append(reference_seq[current_ref_pos:record.POS])
+            all_alt_seq.append(reference_seq[current_ref_pos:record.POS])
             if record.FORMAT is None or 'GT' not in record.FORMAT:
                 print("no gt")
                 return None
@@ -202,17 +203,7 @@ class VcfRecord:
         alt_seq_for_vcf = ''.join(alt_seq)
         print(alt_seq_for_vcf)
         print(ref_seq_for_vcf == alt_seq_for_vcf)
-        if ref_seq_for_vcf != alt_seq_for_vcf:
-            return VcfRecord('\t'.join([
-                self.CHROM,
-                str(ref_start + 1),
-                '.',
-                ref_seq_for_vcf,
-                ''.join(alt_seq),
-                '.', '.', 'SVTYPE=MERGED',
-                'GT', '1/1',
-            ]))
-        else:
+        if ref_seq_for_vcf == alt_seq_for_vcf:
             return VcfRecord('\t'.join([
                 self.CHROM,
                 str(ref_start + 1),
@@ -221,6 +212,16 @@ class VcfRecord:
                 ''.join(all_alt_seq),
                 '.', '.', 'SVTYPE=MERGED',
                 'GT', '0/0',
+            ]))
+        else:
+            return VcfRecord('\t'.join([
+                self.CHROM,
+                str(ref_start + 1),
+                '.',
+                ref_seq_for_vcf,
+                alt_seq_for_vcf,
+                '.', '.', 'SVTYPE=MERGED',
+                'GT', '1/1',
             ]))
 
 
