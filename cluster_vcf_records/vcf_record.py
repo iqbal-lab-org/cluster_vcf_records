@@ -199,8 +199,10 @@ class VcfRecord:
             current_ref_pos += len(record.REF)
 
         print(ref_seq_for_vcf)
-        print(''.join(alt_seq))
-        if ref_seq_for_vcf != ''.join(alt_seq):
+        alt_seq_for_vcf = ''.join(alt_seq)
+        print(alt_seq_for_vcf)
+        print(ref_seq_for_vcf == alt_seq_for_vcf)
+        if ref_seq_for_vcf != alt_seq_for_vcf:
             return VcfRecord('\t'.join([
                 self.CHROM,
                 str(ref_start + 1),
