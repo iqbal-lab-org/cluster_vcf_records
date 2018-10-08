@@ -9,6 +9,7 @@ except:
 __all__ = [
     'vcf_clusterer',
     'vcf_file_read',
+    'vcf_merge',
     'vcf_record',
     'vcf_record_cluster',
 ]
