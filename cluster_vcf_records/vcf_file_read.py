@@ -215,5 +215,8 @@ def vcf_files_to_dict_of_vars(infiles, threads=1):
                         else:
                             variants[ref_name][pos][ref].update(new_alts)
 
+        if i % 100 == 0:
+            logging.info(f'Loaded {i+threads} files out of {len(infiles)}')
+
     return variants
 
