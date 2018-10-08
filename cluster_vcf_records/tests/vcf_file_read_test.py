@@ -116,3 +116,18 @@ class TestVcfFileRead(unittest.TestCase):
         self.assertEqual('sample_42', got)
 
 
+    def test_vcf_file_to_dict_of_vars(self):
+        '''test vcf_file_to_dict_of_vars'''
+        infile = os.path.join(data_dir, 'vcf_file_to_dict_of_vars.vcf')
+        expected = {
+            'ref_42': {
+                10: {'A': {'G', 'T', 'TT'}, 'AC': {'G'}},
+                11: {'C': {'G'}},
+            },
+            'ref_43': {
+                41: {'T': {'G'}},
+            },
+        }
+        got = vcf_file_read.vcf_file_to_dict_of_vars(infile)
+        self.assertEqual(expected, got)
+
