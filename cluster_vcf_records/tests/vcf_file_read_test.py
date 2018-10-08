@@ -131,3 +131,20 @@ class TestVcfFileRead(unittest.TestCase):
         got = vcf_file_read.vcf_file_to_dict_of_vars(infile)
         self.assertEqual(expected, got)
 
+
+    def test_vcf_files_to_dict_of_vars(self):
+        '''test vcf_files_to_dict_of_vars'''
+        infiles = [os.path.join(data_dir, f'vcf_files_to_dict_of_vars.{i}.vcf') for i in range(5)]
+        expected = {
+            'ref_42': {
+                10: {'A': {'G', 'T', 'TT'}, 'AC': {'G'}},
+                11: {'C': {'G'}},
+            },
+            'ref_43': {
+                41: {'T': {'G'}},
+            },
+        }
+        for threads in (1, 2, 3):
+            got = vcf_file_read.vcf_files_to_dict_of_vars(infiles, threads=threads)
+            self.assertEqual(expected, got)
+

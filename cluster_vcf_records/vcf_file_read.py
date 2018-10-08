@@ -1,5 +1,6 @@
 import operator
 import logging
+import multiprocessing
 
 import pyfastaq
 
@@ -186,6 +187,33 @@ def vcf_file_to_dict_of_vars(infile):
                 variants[ref_name][record.POS][record.REF] = set()
 
             variants[ref_name][record.POS][record.REF].update(record.ALT)
+
+    return variants
+
+
+def vcf_files_to_dict_of_vars(infiles, threads=1):
+    variants = {}
+
+    for i in range(0, len(infiles), threads):
+        with multiprocessing.Pool(threads) as pool:
+            new_variants_dict_list = pool.map(vcf_file_to_dict_of_vars, infiles[i:i+threads])
+
+        for new_variants in new_variants_dict_list:
+            for ref_name in new_variants:
+                if ref_name not in variants:
+                    variants[ref_name] = new_variants[ref_name]
+                    continue
+
+                for pos in new_variants[ref_name]:
+                    if pos not in variants[ref_name]:
+                        variants[ref_name][pos] = new_variants[ref_name][pos]
+                        continue
+
+                    for ref, new_alts in new_variants[ref_name][pos].items():
+                        if ref not in variants[ref_name][pos]:
+                            variants[ref_name][pos][ref] = new_alts
+                        else:
+                            variants[ref_name][pos][ref].update(new_alts)
 
     return variants
 
