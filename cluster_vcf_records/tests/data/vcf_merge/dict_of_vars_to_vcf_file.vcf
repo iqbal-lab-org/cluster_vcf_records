@@ -1,0 +1,8 @@
+##fileformat=VCFv4.2
+##source=cluster_vcf_records, version 0.7.0
+##fileDate=2018-10-08
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO
+ref_42	11	.	A	G,T,TT	.	PASS	SVTYPE=MERGED
+ref_42	11	.	AC	G	.	PASS	SVTYPE=MERGED
+ref_42	12	.	C	G	.	PASS	SVTYPE=MERGED
+ref_43	42	.	T	G	.	PASS	SVTYPE=MERGED

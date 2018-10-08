@@ -1,5 +1,6 @@
 import operator
 import logging
+import multiprocessing
 
 import pyfastaq
 
@@ -23,28 +24,28 @@ def vcf_file_to_dict(infile, sort=True, homozygous_only=False, remove_asterisk_a
         if homozygous_only and record.FORMAT.get('GT', None) != '1/1':
             counts['not_homozygous'] += 1
             continue
-        
+
         if min_GT_conf != None:
             if record.QUAL == None:
-            
+
                 if record.INFO.get('SVTYPE') == 'SNP':      ##Clears out any cortex SNP calls
                     counts['cortex_snp_call'] += 1
                     continue
-            
+
                 if float(record.FORMAT.get('GT_CONF')) < min_GT_conf:   ##Filters based on cortex gt_conf
                     counts['GT_conf_too_low'] += 1
                     continue
-        
+
             if record.QUAL != None:
-            
+
                 #if 'INDEL' in record.INFO:        ##Clears out any samtools indel calls
                     #counts['samtools_indel'] += 1
                     #continue
-            
+
                 if min_SNP_qual != None and record.QUAL < min_SNP_qual:    ##Filters based on samtools qual score
                     counts['SNP_qual_too_low'] += 1
                     continue
-            
+
                 if record.INFO.get('DP4') != None:          ##Filters for at least [] dp4 alt reads on both strands
                     if min_dp4 != None:
                         dp4_cov = record.INFO['DP4']
@@ -52,7 +53,7 @@ def vcf_file_to_dict(infile, sort=True, homozygous_only=False, remove_asterisk_a
                         if float(cov_split[2]) < min_dp4 or float(cov_split[3]) < min_dp4:
                             counts['not_enough_high_qual_reads'] += 1
                             continue
-        
+
         if remove_asterisk_alts:
             record.remove_asterisk_alts()
 
@@ -164,3 +165,55 @@ def get_sample_name_from_vcf_file(infile):
     Returns None if no #CHROM line found'''
     header_lines =  get_header_lines_from_vcf_file(infile)
     return get_sample_name_from_vcf_header_lines(header_lines)
+
+
+
+def vcf_file_to_dict_of_vars(infile):
+    '''Loads just the variant info from input VCF file.
+    Output is a dictionary of:
+    ref name -> position -> {ref string -> {set of alt strings}}'''
+    variants = {}
+    _, vcf_records = vcf_file_to_dict(infile, sort=False, remove_asterisk_alts=True, remove_useless_start_nucleotides=True)
+
+    for ref_name, variant_list in vcf_records.items():
+        for record in variant_list:
+            if ref_name not in variants:
+                variants[ref_name] = {}
+
+            if record.POS not in variants[ref_name]:
+                variants[ref_name][record.POS] = {}
+
+            if record.REF not in variants[ref_name][record.POS]:
+                variants[ref_name][record.POS][record.REF] = set()
+
+            variants[ref_name][record.POS][record.REF].update(record.ALT)
+
+    return variants
+
+
+def vcf_files_to_dict_of_vars(infiles, threads=1):
+    variants = {}
+
+    for i in range(0, len(infiles), threads):
+        with multiprocessing.Pool(threads) as pool:
+            new_variants_dict_list = pool.map(vcf_file_to_dict_of_vars, infiles[i:i+threads])
+
+        for new_variants in new_variants_dict_list:
+            for ref_name in new_variants:
+                if ref_name not in variants:
+                    variants[ref_name] = new_variants[ref_name]
+                    continue
+
+                for pos in new_variants[ref_name]:
+                    if pos not in variants[ref_name]:
+                        variants[ref_name][pos] = new_variants[ref_name][pos]
+                        continue
+
+                    for ref, new_alts in new_variants[ref_name][pos].items():
+                        if ref not in variants[ref_name][pos]:
+                            variants[ref_name][pos][ref] = new_alts
+                        else:
+                            variants[ref_name][pos][ref].update(new_alts)
+
+    return variants
+
