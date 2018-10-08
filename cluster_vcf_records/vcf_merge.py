@@ -25,3 +25,11 @@ def _dict_of_vars_to_vcf_file(variants, outfile):
                     alts = sorted(list(variants[ref_name][pos][ref_string]))
                     print(ref_name, pos + 1, '.', ref_string, ','.join(alts), '.', 'PASS', 'SVTYPE=MERGED', sep='\t', file=f)
 
+
+def merge_vcf_files(infiles, outfile, threads=1):
+    '''infiles: list of input VCF file to be merge.
+    outfile: name of output VCF file.
+    threads: number of input files to read in parallel'''
+    vars_dict = vcf_file_read.vcf_files_to_dict_of_vars(infiles, threads=threads)
+    _dict_of_vars_to_vcf_file(vars_dict, outfile)
+

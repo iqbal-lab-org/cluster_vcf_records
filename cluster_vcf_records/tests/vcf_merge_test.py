@@ -40,3 +40,14 @@ class TestVcfMerger(unittest.TestCase):
         self.assertTrue(check_vcfs(expected_file, tmp_file))
         os.unlink(tmp_file)
 
+
+    def test_merge_vcf_files(self):
+        '''test merge_vcf_files'''
+        infiles = [os.path.join(data_dir, f'merge_vcf_files.{i}.vcf') for i in range(5)]
+        expected = os.path.join(data_dir, 'merge_vcf_files.expect.vcf')
+        outfile = 'tmp.merge_vcf_files.vcf'
+        for threads in (1, 2, 3):
+            vcf_merge.merge_vcf_files(infiles, outfile, threads=threads)
+            self.assertTrue(filecmp.cmp(expected, outfile, shallow=False))
+            os.unlink(outfile)
+
