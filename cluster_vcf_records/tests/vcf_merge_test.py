@@ -16,7 +16,7 @@ def check_vcfs(expected_vcf, got_vcf):
     for i in range(len(expected_header)):
         if expected_header[i].startswith('##fileDate='):
             expected_header[i] = '##fileDate=' + str(datetime.date.today())
-        elif expected_header[i].startswith('##source=minos'):
+        elif expected_header[i].startswith('##source=cluster_vcf_records'):
             expected_header[i] = '##source=cluster_vcf_records, version ' + cluster_vcf_records_version
 
     return expected_header == got_header and expected_vcf_records == got_vcf_records
@@ -48,6 +48,6 @@ class TestVcfMerger(unittest.TestCase):
         outfile = 'tmp.merge_vcf_files.vcf'
         for threads in (1, 2, 3):
             vcf_merge.merge_vcf_files(infiles, outfile, threads=threads)
-            self.assertTrue(filecmp.cmp(expected, outfile, shallow=False))
+            self.assertTrue(check_vcfs(expected, outfile))
             os.unlink(outfile)
 
