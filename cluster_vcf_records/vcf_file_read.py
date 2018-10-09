@@ -232,5 +232,6 @@ def vcf_files_to_dict_of_vars(infiles, reference_seqs, threads=1):
         if i % 100 == 0:
             logging.info(f'Loaded {i+threads} files out of {len(infiles)}')
 
+    logging.info(f'Loaded all {len(infiles)} VCF files')
     return variants
 
