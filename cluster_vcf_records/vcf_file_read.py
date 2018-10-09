@@ -1,3 +1,4 @@
+import itertools
 import operator
 import logging
 import multiprocessing
@@ -168,8 +169,11 @@ def get_sample_name_from_vcf_file(infile):
 
 
 
-def vcf_file_to_dict_of_vars(infile):
+def vcf_file_to_dict_of_vars(infile, reference_seqs):
     '''Loads just the variant info from input VCF file.
+    If reference_seqs is given, should be a dict of seq name -> pyfastaq Fastaq sequence,
+    and will be used to sanity check variants in input file. Any where CHROM
+    is not in the dict, or REF string does not match the ref sequence, are ignored
     Output is a dictionary of:
     ref name -> position -> {ref string -> {set of alt strings}}'''
     variants = {}
@@ -177,6 +181,16 @@ def vcf_file_to_dict_of_vars(infile):
 
     for ref_name, variant_list in vcf_records.items():
         for record in variant_list:
+            if record.POS < 0:
+                logging.warning(f'VCF record with negative POS in file {infile}. Ignoring: {record}')
+                continue
+            elif record.CHROM not in reference_seqs:
+                logging.warning(f'CHROM not recognised in VCF record in file {infile}. Ignoring: {record}')
+                continue
+            elif reference_seqs[record.CHROM][record.POS:record.POS + len(record.REF)] != record.REF:
+                logging.warning(f'REF string does not match reference seq in file {infile}. Ignoring: {record}')
+                continue
+
             if ref_name not in variants:
                 variants[ref_name] = {}
 
@@ -191,12 +205,12 @@ def vcf_file_to_dict_of_vars(infile):
     return variants
 
 
-def vcf_files_to_dict_of_vars(infiles, threads=1):
+def vcf_files_to_dict_of_vars(infiles, reference_seqs, threads=1):
     variants = {}
 
     for i in range(0, len(infiles), threads):
         with multiprocessing.Pool(threads) as pool:
-            new_variants_dict_list = pool.map(vcf_file_to_dict_of_vars, infiles[i:i+threads])
+            new_variants_dict_list = pool.starmap(vcf_file_to_dict_of_vars, zip(infiles[i:i+threads], itertools.repeat(reference_seqs)))
 
         for new_variants in new_variants_dict_list:
             for ref_name in new_variants:
@@ -218,5 +232,6 @@ def vcf_files_to_dict_of_vars(infiles, threads=1):
         if i % 100 == 0:
             logging.info(f'Loaded {i+threads} files out of {len(infiles)}')
 
+    logging.info(f'Loaded all {len(infiles)} VCF files')
     return variants
 
