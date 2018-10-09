@@ -1,6 +1,8 @@
 import os
 import unittest
 
+import pyfastaq
+
 from cluster_vcf_records import vcf_file_read, vcf_record
 
 modules_dir = os.path.dirname(os.path.abspath(vcf_file_read.__file__))
@@ -118,6 +120,10 @@ class TestVcfFileRead(unittest.TestCase):
 
     def test_vcf_file_to_dict_of_vars(self):
         '''test vcf_file_to_dict_of_vars'''
+        ref_42 = pyfastaq.sequences.Fasta('ref_42', 'TGACGTACGTACTGT')
+        ref_43 = pyfastaq.sequences.Fasta('ref_43', 'ATGTCG')
+        ref_seqs = {'ref_42': ref_42, 'ref_43': ref_43}
+
         infile = os.path.join(data_dir, 'vcf_file_to_dict_of_vars.vcf')
         expected = {
             'ref_42': {
@@ -125,10 +131,10 @@ class TestVcfFileRead(unittest.TestCase):
                 11: {'C': {'G'}},
             },
             'ref_43': {
-                41: {'T': {'G'}},
+                1: {'T': {'G'}},
             },
         }
-        got = vcf_file_read.vcf_file_to_dict_of_vars(infile)
+        got = vcf_file_read.vcf_file_to_dict_of_vars(infile, reference_seqs=ref_seqs)
         self.assertEqual(expected, got)
 
 
