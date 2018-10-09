@@ -134,12 +134,16 @@ class TestVcfFileRead(unittest.TestCase):
                 1: {'T': {'G'}},
             },
         }
-        got = vcf_file_read.vcf_file_to_dict_of_vars(infile, reference_seqs=ref_seqs)
+        got = vcf_file_read.vcf_file_to_dict_of_vars(infile, ref_seqs)
         self.assertEqual(expected, got)
 
 
     def test_vcf_files_to_dict_of_vars(self):
         '''test vcf_files_to_dict_of_vars'''
+        ref_42 = pyfastaq.sequences.Fasta('ref_42', 'TGACGTACGTACTGT')
+        ref_43 = pyfastaq.sequences.Fasta('ref_43', 'ATGTCG')
+        ref_seqs = {'ref_42': ref_42, 'ref_43': ref_43}
+
         infiles = [os.path.join(data_dir, f'vcf_files_to_dict_of_vars.{i}.vcf') for i in range(5)]
         expected = {
             'ref_42': {
@@ -147,10 +151,10 @@ class TestVcfFileRead(unittest.TestCase):
                 11: {'C': {'G'}},
             },
             'ref_43': {
-                41: {'T': {'G'}},
+                1: {'T': {'G'}},
             },
         }
         for threads in (1, 2, 3):
-            got = vcf_file_read.vcf_files_to_dict_of_vars(infiles, threads=threads)
+            got = vcf_file_read.vcf_files_to_dict_of_vars(infiles, ref_seqs, threads=threads)
             self.assertEqual(expected, got)
 
