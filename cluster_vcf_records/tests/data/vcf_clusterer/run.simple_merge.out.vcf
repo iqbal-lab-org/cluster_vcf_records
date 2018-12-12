@@ -1,6 +1,6 @@
 ##fileformat=VCFv4.2
 ##source=source_name
 #CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	sample_name
-ref.1	3	.	CT	CGA	.	.	SVTYPE=MERGED	GT	1/1
+ref.1	3	.	CT	CGA	.	.	SVTYPE=MERGED	GT:GT_CONF	1/1:24
 ref.1	10	.	A	AT	42.42	.	SVTYPE=INDEL	GT	1/1
 ref.1	10	.	A	GC	42.42	.	SVTYPE=INDEL	GT	1/1

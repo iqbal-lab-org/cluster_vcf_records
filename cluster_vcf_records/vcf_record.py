@@ -133,6 +133,7 @@ class VcfRecord:
         ref_seq_for_vcf = reference_seq[ref_start:ref_end + 1]
         sorted_records = sorted([self, other], key=operator.attrgetter('POS'))
         alt_seq = []
+        gt_confs = []
         current_ref_pos = ref_start
 
         for record in sorted_records:
@@ -140,7 +141,16 @@ class VcfRecord:
             alt_seq.append(reference_seq[current_ref_pos:record.POS])
             alt_seq.append(record.ALT[0])
             current_ref_pos += len(record.REF)
+            if record.FORMAT is not None and 'GT_CONF' in record.FORMAT:
+                gt_confs.append(record.FORMAT['GT_CONF'])
 
+        gt_conf = 0
+        format = "GT"
+        gt_1 = '1/1'
+        if len(gt_confs) > 0:
+            gt_conf = min(gt_confs)
+            format = 'GT:GT_CONF'
+            gt_1 = '1/1:' + str(gt_conf)
 
         return VcfRecord('\t'.join([
             self.CHROM,
@@ -149,7 +159,7 @@ class VcfRecord:
             ref_seq_for_vcf,
             ''.join(alt_seq),
             '.', '.', 'SVTYPE=MERGED',
-            'GT', '1/1',
+            format, gt_1,
         ]))
 
     def gt_aware_merge(self, other, reference_seq):
@@ -196,7 +206,6 @@ class VcfRecord:
                 gt_confs.append(record.FORMAT['GT_CONF'])
 
         alt_seq_for_vcf = ''.join(alt_seq)
-        gt_conf = 0
         format = "GT"
         gt_0 = '0/0'
         gt_1 = '1/1'
