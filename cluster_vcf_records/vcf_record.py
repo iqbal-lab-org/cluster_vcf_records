@@ -196,7 +196,15 @@ class VcfRecord:
                 confs.append(record.FORMAT['GT_CONF'])
 
         alt_seq_for_vcf = ''.join(alt_seq)
-        gt_conf = min(gt_confs)
+        gt_conf = 0
+        format = "GT"
+        gt_0 = '0/0'
+        gt_1 = '1/1'
+        if len(gt_confs) > 0:
+            gt_conf = min(gt_confs)
+            format = 'GT:GT_CONF'
+            gt_0 = '0/0:' + str(gt_conf)
+            gt_1 = '1/1:' + str(gt_conf)
 
         if ref_seq_for_vcf == alt_seq_for_vcf:
             return VcfRecord('\t'.join([
@@ -206,7 +214,7 @@ class VcfRecord:
                 ref_seq_for_vcf,
                 ''.join(all_alt_seq),
                 '.', '.', 'SVTYPE=MERGED',
-                'GT:GT_CONF', '0/0:' + str(gt_conf),
+                format, gt_0,
             ]))
         else:
             return VcfRecord('\t'.join([
@@ -216,7 +224,7 @@ class VcfRecord:
                 ref_seq_for_vcf,
                 alt_seq_for_vcf,
                 '.', '.', 'SVTYPE=MERGED',
-                'GT:GT_CONF', '1/1:' + str(gt_conf),
+                format, gt_1,
             ]))
 
 
