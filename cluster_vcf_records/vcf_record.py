@@ -196,7 +196,7 @@ class VcfRecord:
                 confs.append(record.FORMAT['GT_CONF'])
 
         alt_seq_for_vcf = ''.join(alt_seq)
-        gt_conf = min(confs)
+        gt_conf = min(gt_confs)
 
         if ref_seq_for_vcf == alt_seq_for_vcf:
             return VcfRecord('\t'.join([
