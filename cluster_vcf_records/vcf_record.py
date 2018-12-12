@@ -193,7 +193,7 @@ class VcfRecord:
             all_alt_seq.append(record.ALT[0])
             current_ref_pos += len(record.REF)
             if record.FORMAT is not None and 'GT_CONF' in record.FORMAT:
-                confs.append(record.FORMAT['GT_CONF'])
+                gt_confs.append(record.FORMAT['GT_CONF'])
 
         alt_seq_for_vcf = ''.join(alt_seq)
         gt_conf = 0
