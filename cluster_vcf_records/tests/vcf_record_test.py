@@ -70,6 +70,20 @@ class TestVcfRecord(unittest.TestCase):
         self.assertFalse(record.is_snp())
 
 
+    def test_is_homozygous(self):
+        '''test is_homozygous'''
+        record = vcf_record.VcfRecord('ref\t1\tid1\tA\tG\t42\tPASS\tSVTYPE=SNP\tGT\t0/0')
+        self.assertTrue(record.is_homozygous())
+        record = vcf_record.VcfRecord('ref\t1\tid1\tA\tG\t42\tPASS\tSVTYPE=SNP\tGT\t1/1')
+        self.assertTrue(record.is_homozygous())
+        record = vcf_record.VcfRecord('ref\t1\tid1\tA\tG,T\t42\tPASS\tSVTYPE=SNP\tGT\t2/2')
+        self.assertTrue(record.is_homozygous())
+        record = vcf_record.VcfRecord('ref\t1\tid1\tA\tG,T\t42\tPASS\tSVTYPE=SNP\tGT\t1/2')
+        self.assertFalse(record.is_homozygous())
+        record = vcf_record.VcfRecord('ref\t1\tid1\tA\tG,T\t42\tPASS\tSVTYPE=SNP\tGT\t./.')
+        self.assertFalse(record.is_homozygous())
+
+
     def test_set_format_key_value(self):
         '''test set_format_key_value'''
         record = vcf_record.VcfRecord('ref_42\t11\tid_foo\tA\tG\t42.42\tPASS\tFOO;KMER=31;SVLEN=0;SVTYPE=SNP\tGT:COV:GT_CONF\t1/1:0,52:39.80')

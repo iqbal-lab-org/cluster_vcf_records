@@ -22,7 +22,7 @@ def vcf_file_to_dict(infile, sort=True, homozygous_only=False, remove_asterisk_a
             continue
 
         record = vcf_record.VcfRecord(line)
-        if homozygous_only and record.FORMAT.get('GT', None) != '1/1':
+        if homozygous_only and not record.is_homozygous():
             counts['not_homozygous'] += 1
             continue
 

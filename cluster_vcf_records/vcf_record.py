@@ -96,6 +96,16 @@ class VcfRecord:
         return len(self.REF) == 1 and self.REF in nucleotides and set(self.ALT).issubset(nucleotides)
 
 
+    def is_homozygous(self):
+        '''Returns true iff this variant has a GT field and is homozygous, which here
+        means that the genotype is n/n (where n can be any number)'''
+        if self.FORMAT is None:
+            return False
+        else:
+            genotypes = set(self.FORMAT.get('GT', '0/1').split('/'))
+            return '.' not in genotypes and len(genotypes) == 1
+
+
     def set_format_key_value(self, key, value):
         '''Add a new key/value pair. Key in column 9 (FORMAT)
         and value in column 10. If key already exists, then updates
