@@ -98,7 +98,7 @@ class VcfRecord:
 
     def is_homozygous(self):
         '''Returns true iff this variant has a GT field and is homozygous, which here
-        means that the genotype is n/n (where n can be any number)'''
+        means that the genotype is n/n (where n can be any number).'''
         if self.FORMAT is None:
             return False
         else:
