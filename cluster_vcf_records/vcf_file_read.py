@@ -9,11 +9,11 @@ from cluster_vcf_records import vcf_record
 
 class Error (Exception): pass
 
-def vcf_file_to_dict(infile, sort=True, homozygous_only=False, remove_asterisk_alts=False, max_REF_len=None, remove_useless_start_nucleotides=False, min_SNP_qual=None, min_dp4=None, min_GT_conf=None):
+def vcf_file_to_dict(infile, sort=True, homozygous_only=False, remove_asterisk_alts=False, max_REF_len=None, remove_useless_start_nucleotides=False, min_SNP_qual=None, min_dp4=None, min_GT_conf=None, reference_seqs=None):
     header_lines = []
     records = {}
     f = pyfastaq.utils.open_file_read(infile)
-    count_keys = ['keep', 'not_homozygous', 'REF_too_long', 'alt_is_asterisk','SNP_qual_too_low','not_enough_high_qual_reads','GT_conf_too_low','samtools_indel','cortex_snp_call']
+    count_keys = ['keep', 'not_homozygous', 'REF_too_long', 'alt_is_asterisk','SNP_qual_too_low','not_enough_high_qual_reads','GT_conf_too_low','samtools_indel','cortex_snp_call', 'not_match_ref']
     counts = {x: 0 for x in count_keys}
 
     for line in f:
@@ -22,6 +22,10 @@ def vcf_file_to_dict(infile, sort=True, homozygous_only=False, remove_asterisk_a
             continue
 
         record = vcf_record.VcfRecord(line)
+        if reference_seqs is not None and not(record.ref_string_matches_dict_of_ref_sequences(reference_seqs)):
+            counts['not_match_ref'] += 1
+            continue
+
         if homozygous_only and not record.is_homozygous():
             counts['not_homozygous'] += 1
             continue
