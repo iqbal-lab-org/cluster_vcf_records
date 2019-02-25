@@ -63,18 +63,22 @@ class VcfClusterer:
 
 
     @classmethod
-    def _load_vcf_files(cls, filename_list, homozygous_only=False, max_REF_len=None, min_SNP_qual=None, min_dp4=None, min_GT_conf=None):
+    def _load_vcf_files(cls, filename_list, reference_seqs, homozygous_only=False, max_REF_len=None, min_SNP_qual=None, min_dp4=None, min_GT_conf=None):
         '''Loads all the vcf files from filename_list. Returns tuple of:
         1. Sample name. If more than one sample name found, uses the first one
         and warns to stderr
         2. Dictionary. filename => list of header lines for that file
-        3. Dictionary. ref name => list of VcfRecords sorted by position'''
+        3. Dictionary. ref name => list of VcfRecords sorted by position.
+
+        reference_seqs should be a dictionary of sequence name -> sequence.
+        This causes all records from the VCF to be sanity checked against the reference sequence,
+        and any records where the REF seq does not match the expected sequence is removed.'''
         headers = {}
         vcf_records = None
         sample_name = None
 
         for filename in filename_list:
-            headers[filename], new_records = vcf_file_read.vcf_file_to_dict(filename, homozygous_only=homozygous_only, remove_asterisk_alts=True, max_REF_len=max_REF_len, remove_useless_start_nucleotides=True, min_SNP_qual=min_SNP_qual, min_dp4=min_dp4, min_GT_conf=min_GT_conf)
+            headers[filename], new_records = vcf_file_read.vcf_file_to_dict(filename, homozygous_only=homozygous_only, remove_asterisk_alts=True, max_REF_len=max_REF_len, remove_useless_start_nucleotides=True, min_SNP_qual=min_SNP_qual, min_dp4=min_dp4, min_GT_conf=min_GT_conf, reference_seqs=reference_seqs)
 
             new_sample_name = vcf_file_read.get_sample_name_from_vcf_header_lines(headers[filename])
             if sample_name is None and new_sample_name is not None:
@@ -151,7 +155,7 @@ class VcfClusterer:
 
 
     def run(self):
-        sample_name, vcf_headers, vcf_records = VcfClusterer._load_vcf_files(self.vcf_files, homozygous_only=self.homozygous_only, max_REF_len=self.max_REF_len)
+        sample_name, vcf_headers, vcf_records = VcfClusterer._load_vcf_files(self.vcf_files, self.reference_seqs, homozygous_only=self.homozygous_only, max_REF_len=self.max_REF_len)
 
         f_out = pyfastaq.utils.open_file_write(self.vcf_outfile)
         print('##fileformat=VCFv4.2', file=f_out)
