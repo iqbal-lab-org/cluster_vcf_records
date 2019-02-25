@@ -26,7 +26,7 @@ class TestVcfClusterer(unittest.TestCase):
         }
 
         expected_sample = 'sample'
-        got_sample, got_headers, got_records = vcf_clusterer.VcfClusterer._load_vcf_files([vcf_file_1])
+        got_sample, got_headers, got_records = vcf_clusterer.VcfClusterer._load_vcf_files([vcf_file_1], None)
         self.assertEqual(expected_sample, got_sample)
         self.assertEqual(expected_headers, got_headers)
         self.assertEqual(expected_records, got_records)
@@ -36,7 +36,7 @@ class TestVcfClusterer(unittest.TestCase):
         expected_records['ref.3'] = [vcf_record.VcfRecord('ref.3\t8\tid5\tA\tG\tPASS\tSVTYPE=SNP\tGT\t1/1')]
         expected_records['ref.1'].insert(1, vcf_record.VcfRecord('ref.1\t8\tid4\tC\tG\tPASS\tSVTYPE=SNP\tGT\t1/1'))
         expected_sample = 'sample_from_vcf_2'
-        got_sample, got_headers, got_records = vcf_clusterer.VcfClusterer._load_vcf_files([vcf_file_1, vcf_file_2])
+        got_sample, got_headers, got_records = vcf_clusterer.VcfClusterer._load_vcf_files([vcf_file_1, vcf_file_2], None)
         self.assertEqual(expected_sample, got_sample)
         self.assertEqual(expected_headers, got_headers)
         self.assertEqual(expected_records, got_records)

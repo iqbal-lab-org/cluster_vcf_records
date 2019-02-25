@@ -13,6 +13,14 @@ data_dir = os.path.join(modules_dir, 'tests', 'data', 'vcf_file_read')
 class TestVcfFileRead(unittest.TestCase):
     def test_vcf_file_to_dict(self):
         '''test vcf_file_to_dict'''
+        ref_seqs = {
+            #                   10        20        30        40
+            #          123456789012345678901234567890123456789012345
+            'ref_42': 'GTAGTACGTAACATGT',
+            'ref_43': 'AGCTGCGAGCGCGTCGACTGCATGCATCGATCGAGCTAGCTTTTA',
+            'ref_44': 'AGTA',
+        }
+
         expected_header = ['# header1', '# header2']
         lines = [
             'ref_42\t11\tid_foo\tA\tG\t42.42\tPASS\tKMER=31;SVLEN=0;SVTYPE=SNP\tGT:COV:GT_CONF\t1/1:0,52:39.80',
@@ -20,11 +28,13 @@ class TestVcfFileRead(unittest.TestCase):
             'ref_43\t42\tid_foo\tT\tG\t43.42\tPASS\tKMER=31;SVLEN=0;SVTYPE=SNP\tGT:COV:GT_CONF\t1/1:0,54:39.82',
             'ref_43\t43\tid_foo\tT\tG,*\t43.42\tPASS\tKMER=31;SVLEN=0;SVTYPE=SNP\tGT:COV:GT_CONF\t1/1:0,54:39.83',
             'ref_43\t44\tid_foo\tT\t*\t43.42\tPASS\tKMER=31;SVLEN=0;SVTYPE=SNP\tGT:COV:GT_CONF\t1/1:0,54:39.84',
+            'ref_44\t2\tid_foo\tT\tA\t43.42\tPASS\tKMER=31;SVLEN=0;SVTYPE=SNP\tGT:COV:GT_CONF\t1/1:0,54:39.84',
         ]
 
         expected_records = {
             'ref_42': [vcf_record.VcfRecord(lines[0]), vcf_record.VcfRecord(lines[1])],
             'ref_43': [vcf_record.VcfRecord(lines[x]) for x in (2, 3, 4)],
+            'ref_44': [vcf_record.VcfRecord(lines[5])]
         }
 
         infile = os.path.join(data_dir, 'vcf_file_to_dict.vcf')
@@ -32,8 +42,14 @@ class TestVcfFileRead(unittest.TestCase):
         self.assertEqual(expected_records, got_records)
         self.assertEqual(expected_header, got_header)
 
+        del expected_records['ref_44']
+        infile = os.path.join(data_dir, 'vcf_file_to_dict.vcf')
+        got_header, got_records = vcf_file_read.vcf_file_to_dict(infile, reference_seqs=ref_seqs)
+        self.assertEqual(expected_records, got_records)
+        self.assertEqual(expected_header, got_header)
+
         infile = os.path.join(data_dir, 'vcf_file_to_dict.vcf.gz')
-        got_header, got_records = vcf_file_read.vcf_file_to_dict(infile)
+        got_header, got_records = vcf_file_read.vcf_file_to_dict(infile, reference_seqs=ref_seqs)
         self.assertEqual(expected_records, got_records)
         self.assertEqual(expected_header, got_header)
 
@@ -41,7 +57,7 @@ class TestVcfFileRead(unittest.TestCase):
         expected_records['ref_43'].pop()
         expected_records['ref_43'][-1].remove_asterisk_alts()
         infile = os.path.join(data_dir, 'vcf_file_to_dict.vcf')
-        got_header, got_records = vcf_file_read.vcf_file_to_dict(infile, remove_asterisk_alts=True)
+        got_header, got_records = vcf_file_read.vcf_file_to_dict(infile, remove_asterisk_alts=True, reference_seqs=ref_seqs)
         self.assertEqual(expected_records, got_records)
         self.assertEqual(expected_header, got_header)
 
