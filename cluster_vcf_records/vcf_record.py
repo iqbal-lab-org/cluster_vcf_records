@@ -84,6 +84,20 @@ class VcfRecord:
         return '\t'.join(fields)
 
 
+    def ref_string_matches_ref_sequence(self, ref_sequence):
+        '''Returns true iff the REF string in the record agrees with
+        the given ref_sequence'''
+        # you never know what you're gonna get...
+        if self.POS < 0:
+            return False
+
+        end_pos = self.ref_end_pos()
+        if end_pos >= len(ref_sequence):
+            return False
+
+        return self.REF == ref_sequence[self.POS:end_pos + 1]
+
+
     def remove_asterisk_alts(self):
         '''Removes "*" from alts, if there. Warning:
         this could mean that the records ends up with NO alts!'''

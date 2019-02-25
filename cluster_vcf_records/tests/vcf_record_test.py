@@ -41,6 +41,21 @@ class TestVcfRecord(unittest.TestCase):
         self.assertEqual(line, str(record))
 
 
+    def test_ref_string_matches_ref_sequence(self):
+        '''test ref_string_matches_ref_sequence'''
+        record = vcf_record.VcfRecord('ref_name\t-1\t.\tAGT\tG\tPASS\tSVTYPE=SNP\tGT\t1/1')
+        self.assertFalse(record.ref_string_matches_ref_sequence('AG'))
+        record = vcf_record.VcfRecord('ref_name\t3\t.\tA\tG\tPASS\tSVTYPE=SNP\tGT\t1/1')
+        self.assertTrue(record.ref_string_matches_ref_sequence('GCATG'))
+        self.assertFalse(record.ref_string_matches_ref_sequence('GCxTG'))
+        record = vcf_record.VcfRecord('ref_name\t3\t.\tAGT\tG\tPASS\tSVTYPE=SNP\tGT\t1/1')
+        self.assertTrue(record.ref_string_matches_ref_sequence('GCAGT'))
+        self.assertFalse(record.ref_string_matches_ref_sequence('GCAGC'))
+        self.assertFalse(record.ref_string_matches_ref_sequence('GCAG'))
+        self.assertFalse(record.ref_string_matches_ref_sequence('GCA'))
+        self.assertFalse(record.ref_string_matches_ref_sequence('GA'))
+
+
     def test_remove_asterisk_alts(self):
         '''test remove_asterisk_alts'''
         record = vcf_record.VcfRecord('ref.3\t8\tid5\tA\tG\tPASS\tSVTYPE=SNP\tGT\t1/1')
