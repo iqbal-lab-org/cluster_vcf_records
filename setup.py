@@ -15,12 +15,12 @@ setup(
     install_requires=[
         'pyfastaq >= 3.14.0',
     ],
-    license='GPLv3',
+    license='MIT',
     classifiers=[
         'Development Status :: 4 - Beta',
         'Topic :: Scientific/Engineering :: Bio-Informatics',
         'Programming Language :: Python :: 3 :: Only',
-        'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
+        'License :: OSI Approved :: MIT',
     ],
 )
 
