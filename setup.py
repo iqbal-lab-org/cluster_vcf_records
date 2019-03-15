@@ -20,7 +20,7 @@ setup(
         'Development Status :: 4 - Beta',
         'Topic :: Scientific/Engineering :: Bio-Informatics',
         'Programming Language :: Python :: 3 :: Only',
-        'License :: OSI Approved :: MIT',
+        'License :: OSI Approved :: MIT License',
     ],
 )
 
