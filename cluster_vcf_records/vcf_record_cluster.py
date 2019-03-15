@@ -201,7 +201,7 @@ class VcfRecordCluster:
             new_record.add_flanking_seqs(ref_seq, final_start_position, final_end_position)
             new_vcf_records.append(new_record)
 
-        alts = ','.join([x.ALT[0] for x in new_vcf_records])
+        alts = ','.join(sorted(list(set([x.ALT[0] for x in new_vcf_records]))))
         new_record = vcf_record.VcfRecord('\t'.join([self.vcf_records[0].CHROM, str(final_start_position + 1), '.', new_vcf_records[0].REF, alts, '.', 'PASS', '.']))
 
         return new_record
