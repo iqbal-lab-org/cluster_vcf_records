@@ -46,6 +46,12 @@ class VcfClusterer:
         self.vcf_files = vcf_files
         self.reference_seqs = {}
         pyfastaq.tasks.file_to_dict(reference_fasta, self.reference_seqs)
+        
+        # If fasta header contains whitespace, add the first word as valid sequence ID (on top of whole line- pyfastaq module produced).
+        # This allows vcf files with CHROM field being only first word of fasta header, to be parsed correctly.
+        stripped_keys = {key.split()[0]: self.reference_seqs[key] for key in self.reference_seqs}
+        self.reference_seqs.update(stripped_keys)
+
         for seq in self.reference_seqs.values():
             seq.seq = seq.seq.upper()
         self.vcf_outfile = vcf_outfile
