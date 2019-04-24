@@ -50,7 +50,7 @@ class VcfRecordCluster:
             return None
         elif len(self) == 1:
             record = copy.copy(self[0])
-            record.FILTER = 'PASS'
+            record.FILTER = {'PASS'}
             return record
 
         logging.debug('make_one_merged_vcf_record_for_gramtools() start. Number of records: ' +  str(len(self)))
