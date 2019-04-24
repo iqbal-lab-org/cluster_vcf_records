@@ -57,7 +57,7 @@ class TestVcfRecordCluster(unittest.TestCase):
         # If there's only one record, then we should just get that one back,
         # but should have FILTER = PASS
         expected = copy.copy(record1)
-        expected.FILTER = 'PASS'
+        expected.FILTER = {'PASS'}
         self.assertEqual(expected, cluster.make_one_merged_vcf_record_for_gramtools(ref_seq))
 
         # Test one record, but two alleles
