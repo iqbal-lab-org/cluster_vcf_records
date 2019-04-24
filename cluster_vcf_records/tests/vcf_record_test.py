@@ -16,15 +16,19 @@ class TestVcfRecord(unittest.TestCase):
         self.assertEqual(record.REF, 'A')
         self.assertEqual(record.ALT, ['G'])
         self.assertEqual(record.QUAL, 42.42)
-        self.assertEqual(record.FILTER, 'PASS')
+        self.assertEqual(record.FILTER, {'PASS'})
         self.assertEqual(record.INFO, {'KMER': '31', 'SVLEN': '0', 'SVTYPE': 'SNP'})
         self.assertEqual(record.FORMAT, {'GT': '1/1', 'COV': '0,52', 'GT_CONF': '39.80'})
 
-        line = 'ref_42\t11\tid_foo\tA\tG,TC\t.\tPASS\tKMER=31;SVLEN=0;SVTYPE=SNP\tGT:COV:GT_CONF\t1/1:0,52:39.80\n'
+        line = 'ref_42\t11\tid_foo\tA\tG,TC\t.\tFilter1;Filter2\tKMER=31;SVLEN=0;SVTYPE=SNP\tGT:COV:GT_CONF\t1/1:0,52:39.80\n'
         record = vcf_record.VcfRecord(line)
         self.assertEqual(record.QUAL, None)
         self.assertEqual(record.ALT, ['G', 'TC'])
+        self.assertEqual(record.FILTER, {'Filter1', 'Filter2'})
 
+        line = 'ref_42\t11\tid_foo\tA\tG,TC\t.\t.\tKMER=31;SVLEN=0;SVTYPE=SNP\tGT:COV:GT_CONF\t1/1:0,52:39.80\n'
+        record = vcf_record.VcfRecord(line)
+        self.assertEqual(record.FILTER, set())
 
     def test_str(self):
         '''test __str__'''

@@ -19,7 +19,7 @@ class VcfRecord:
             self.REF = fields[3]
             self.ALT = fields[4].split(',')
             self.QUAL = fields[5]
-            self.FILTER = fields[6]
+            self.FILTER = set() if fields[6] == '.' else set(fields[6].split(';'))
             INFO = fields[7]
         except:
             raise Error('Error reading line of vcf file:' + line)
@@ -72,7 +72,7 @@ class VcfRecord:
             self.REF,
             ','.join(self.ALT),
             '.' if self.QUAL is None else str(self.QUAL),
-            self.FILTER,
+            '.' if len(self.FILTER) == 0 else ';'.join(sorted(list(self.FILTER))),
             info_string,
         ]
 
