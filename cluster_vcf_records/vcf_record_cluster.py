@@ -8,7 +8,15 @@ class Error (Exception): pass
 
 class VcfRecordCluster:
     def __init__(self, vcf_record=None, max_distance_between_variants=31):
-        self.vcf_records = [] if vcf_record is None else [vcf_record]
+        if vcf_record is None:
+            self.vcf_records = []
+            self.start = None
+            self.end = None
+        else:
+            self.vcf_records = [vcf_record]
+            self.start = vcf_record.POS
+            self.end = self.start + len(vcf_record.REF) - 1
+
         self.max_distance_between_variants = max_distance_between_variants
 
 
@@ -25,11 +33,29 @@ class VcfRecordCluster:
 
 
     def add_vcf_record(self, vcf_record):
-        if len(self) == 0 or True in {x.near_to_position(vcf_record.POS, self.max_distance_between_variants) for x in self.vcf_records}:
+        '''
+        Query the current cluster boundaries allowing for a distance around them, and include vcf_record if it is inside.
+        '''
+        if len(self) == 0:
             self.vcf_records.append(vcf_record)
+            self.start = vcf_record.POS
+            self.end = self.start + len(vcf_record.REF) - 1
             return True
+
         else:
-            return False
+            # Here not making assumption that vcf_record's POS is >= self.start; yet for records processed in sorted order,
+            # this should be the case.
+            if self.start - self.max_distance_between_variants <= vcf_record.POS <= self.end + self.max_distance_between_variants:
+                self.vcf_records.append(vcf_record)
+
+                # Update the cluster boundaries if necessary
+                if vcf_record.POS > self.end:
+                    self.end = vcf_record.POS
+                elif vcf_record.POS < self.start:
+                    self.start = vcf_record.POS
+                return True
+
+        return False
 
 
     def start_and_end(self):

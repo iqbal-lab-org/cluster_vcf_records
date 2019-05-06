@@ -135,6 +135,9 @@ class VcfClusterer:
         expanded_vcf_records = VcfClusterer._expand_alts_in_vcf_record_list(vcf_records)
         new_vcf_records = [x for x in expanded_vcf_records if not x.is_snp()]
 
+        # Because the routine below is worse-case quadratic, we refuse to do it if it implies > ~100 million calls
+        if len(new_vcf_records) > 10000:
+            return expanded_vcf_records
 
         for i in range(len(new_vcf_records) - 1):
             j = i + 1
