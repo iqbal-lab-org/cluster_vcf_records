@@ -46,7 +46,7 @@ class VcfClusterer:
         self.vcf_files = vcf_files
         self.reference_seqs = {}
         pyfastaq.tasks.file_to_dict(reference_fasta, self.reference_seqs)
-        
+
         # If fasta header contains whitespace, add the first word as valid sequence ID (on top of whole line- pyfastaq module produced).
         # This allows vcf files with CHROM field being only first word of fasta header, to be parsed correctly.
         stripped_keys = {key.split()[0]: self.reference_seqs[key] for key in self.reference_seqs}
@@ -154,17 +154,26 @@ class VcfClusterer:
 
     @classmethod
     def _cluster_vcf_record_list(cls, vcf_records, max_distance_between_variants=1):
-        new_list = [vcf_record_cluster.VcfRecordCluster(max_distance_between_variants=max_distance_between_variants)]
+        new_cluster_list = [vcf_record_cluster.VcfRecordCluster(max_distance_between_variants=max_distance_between_variants)]
 
+        # We try adding each vcf_record to the lastmost cluster; if this fails, we put it in a new cluster of its own.
         for vcf_record in vcf_records:
-            if not new_list[-1].add_vcf_record(vcf_record):
-                new_list.append(vcf_record_cluster.VcfRecordCluster(vcf_record=vcf_record, max_distance_between_variants=max_distance_between_variants))
+            last_cluster = new_cluster_list[-1]
+            successfully_added = last_cluster.add_vcf_record(vcf_record)
 
-        return new_list
+            if not successfully_added: # Make a new cluster
+                new_cluster = vcf_record_cluster.VcfRecordCluster(vcf_record=vcf_record,
+                                                                  max_distance_between_variants=max_distance_between_variants)
+                new_cluster_list.append(new_cluster)
+
+        return new_cluster_list
 
 
     def run(self):
-        sample_name, vcf_headers, vcf_records = VcfClusterer._load_vcf_files(self.vcf_files, self.reference_seqs, homozygous_only=self.homozygous_only, max_REF_len=self.max_REF_len)
+        sample_name, vcf_headers, vcf_records = \
+            VcfClusterer._load_vcf_files(self.vcf_files,
+                                         self.reference_seqs, homozygous_only=self.homozygous_only,
+                                         max_REF_len=self.max_REF_len)
 
         f_out = pyfastaq.utils.open_file_write(self.vcf_outfile)
         print('##fileformat=VCFv4.2', file=f_out)
@@ -175,8 +184,12 @@ class VcfClusterer:
             ref_seq = self.reference_seqs[ref_name]
 
             if self.merge_method == 'gramtools':
-                rmdup_list = VcfClusterer._expand_alts_and_remove_duplicates_in_list(vcf_records[ref_name], ref_seq, indel_gap=self.max_gap_indel_rmdup)
-                cluster_list = VcfClusterer._cluster_vcf_record_list(rmdup_list,  max_distance_between_variants=self.max_distance_between_variants)
+                rmdup_list = VcfClusterer._expand_alts_and_remove_duplicates_in_list(
+                    vcf_records[ref_name], ref_seq, indel_gap=self.max_gap_indel_rmdup)
+
+                cluster_list = VcfClusterer._cluster_vcf_record_list(
+                    rmdup_list,  max_distance_between_variants=self.max_distance_between_variants)
+
                 for cluster in cluster_list:
                     if len(cluster) > 0:
                         clustered_vcf = cluster.make_one_merged_vcf_record_for_gramtools(ref_seq, max_alleles=self.max_alleles_per_cluster)
@@ -186,6 +199,7 @@ class VcfClusterer:
                             merged_record = cluster.make_separate_indels_and_one_alt_with_all_snps_no_combinations(ref_seq)
                             if merged_record is not None:
                                 print(merged_record, file=f_out)
+
             elif self.merge_method == 'simple':
                 cluster_list = VcfClusterer._cluster_vcf_record_list(vcf_records[ref_name], max_distance_between_variants=self.max_distance_between_variants)
                 for cluster in cluster_list:

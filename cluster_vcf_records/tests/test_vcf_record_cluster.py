@@ -4,7 +4,7 @@ import unittest
 
 import pyfastaq
 
-from cluster_vcf_records import vcf_record, vcf_record_cluster
+from cluster_vcf_records import vcf_record, vcf_record_cluster, vcf_clusterer
 
 modules_dir = os.path.dirname(os.path.abspath(vcf_record_cluster.__file__))
 data_dir = os.path.join(modules_dir, 'tests', 'data', 'vcf_record_cluster')
@@ -102,6 +102,43 @@ class TestVcfRecordCluster(unittest.TestCase):
 
         with self.assertRaises(ValueError):
             cluster.make_one_merged_vcf_record_for_gramtools(ref_seq)
+
+    def test_SeveralComplexRecords_CorrectClustering(self):
+        """
+        Here's an example where we have two complex records followed by a SNP.
+        This unit test i)tests cluster chaining; ii)illustrates importance of record POS ordering.
+
+        Assertions 1 and 2:
+            Combining the first and third records yields two distinct clusters;
+            combining them all, in order, together gives a single cluster.
+
+            This is because extending the first with the second (NB: in that order!!) extends the cluster boundaries
+            to make the third record overlap.
+
+        Assertion 3:
+            Here I show the importance of order. First note that we only look at the last cluster in the list of clusters
+            to determine if a record gets added to that, or makes a new cluster.
+
+            Adding record 2 AFTER records 1 and 3, the fact that record 2 overlaps with record 1 is lost;
+            and so is the bridging of all three.
+        """
+        ref_seq = 'TTCGGCAGGCATT' # For the record.
+        record_1 = vcf_record.VcfRecord('ref\t3\t.\tCGGCA\tC\t.\tPASS\tSVTPYPE=COMPLEX\tGT\t1/1')
+        record_2 = vcf_record.VcfRecord('ref\t5\t.\tGCAGGCA\tGCTGGCT\t.\tPASS\tSVTPYPE=COMPLEX\tGT\t1/1')
+        record_3 = vcf_record.VcfRecord('ref\t10\t.\tC\tA\t42.42\tPASS\tSVTPYPE=SNP\tGT\t1/1')
+
+        Two_clusters = vcf_clusterer.VcfClusterer._cluster_vcf_record_list([record_1, record_3],
+                                                                      max_distance_between_variants=1)
+        self.assertEqual(len(Two_clusters), 2)
+
+        One_cluster = vcf_clusterer.VcfClusterer._cluster_vcf_record_list([record_1, record_2, record_3],
+                                                      max_distance_between_variants=1)
+
+        self.assertEqual(len(One_cluster), 1)
+
+        Three_clusters = vcf_clusterer.VcfClusterer._cluster_vcf_record_list([record_1, record_3, record_2],
+                                                                             max_distance_between_variants=1)
+        self.assertEqual(len(Three_clusters), 3)
 
 
     def test_make_simple_merged_vcf_with_no_combinations(self):

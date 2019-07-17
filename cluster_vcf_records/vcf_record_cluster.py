@@ -36,10 +36,11 @@ class VcfRecordCluster:
         '''
         Query the current cluster boundaries allowing for a distance around them, and include vcf_record if it is inside.
         '''
+        record_end = vcf_record.POS + len(vcf_record.REF) - 1
         if len(self) == 0:
             self.vcf_records.append(vcf_record)
             self.start = vcf_record.POS
-            self.end = self.start + len(vcf_record.REF) - 1
+            self.end = record_end
             return True
 
         else:
@@ -49,8 +50,8 @@ class VcfRecordCluster:
                 self.vcf_records.append(vcf_record)
 
                 # Update the cluster boundaries if necessary
-                if vcf_record.POS > self.end:
-                    self.end = vcf_record.POS
+                if record_end > self.end:
+                    self.end = record_end
                 elif vcf_record.POS < self.start:
                     self.start = vcf_record.POS
                 return True
