@@ -20,5 +20,9 @@ cluster_vcf_records.cluster(input_vcf_file_paths,
 
 For further information and a description of optional arguments, see `help(cluster_vcf_records.vcf_clusterer.VcfClusterer)`
 
+## Develop
+
+Run `python3 -m unittest` from the top-level directory to run all unit tests.
+
 # License
 MIT
