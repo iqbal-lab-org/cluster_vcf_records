@@ -8,10 +8,6 @@ import pyfastaq
 from cluster_vcf_records import vcf_record
 
 
-class Error(Exception):
-    pass
-
-
 def vcf_file_to_dict(
     infile,
     sort=True,
@@ -169,7 +165,7 @@ def get_sample_name_from_vcf_header_lines(header_lines):
                 "INFO",
             ]
             if fields[: len(required_cols)] != required_cols:
-                raise Error(
+                raise Exception(
                     "Error! #CHROM line must have these for first 8 columns: "
                     + ", ".join(required_cols)
                     + "\nat this line of file: "
@@ -182,7 +178,7 @@ def get_sample_name_from_vcf_header_lines(header_lines):
             required_cols.append("FORMAT")
             format_column = fields[len(required_cols) - 1]
             if format_column != required_cols[-1]:
-                raise Error(
+                raise Exception(
                     'Error! #CHROM line has 9^th column, which should be "FORMAT" but is: "'
                     + format_column
                     + '" at this line of file: '

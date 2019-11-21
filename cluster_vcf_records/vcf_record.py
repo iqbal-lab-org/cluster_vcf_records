@@ -2,10 +2,6 @@ import copy
 import operator
 
 
-class Error(Exception):
-    pass
-
-
 class VcfRecord:
     def __init__(self, line):
         """Constructs VcfRecord from a line of a VCF file.
@@ -24,7 +20,7 @@ class VcfRecord:
             self.FILTER = set() if fields[6] == "." else set(fields[6].split(";"))
             INFO = fields[7]
         except:
-            raise Error("Error reading line of vcf file:" + line)
+            raise Exception("Error reading line of vcf file:" + line)
 
         try:
             self.QUAL = float(self.QUAL)
@@ -303,7 +299,7 @@ class VcfRecord:
         """Adds new_start many nucleotides at the start, and new_end many nucleotides
         at the end from the appropriate nucleotides in reference sequence ref_seq."""
         if new_start > self.POS or new_end < self.ref_end_pos():
-            raise Error(
+            raise Exception(
                 "new start and end positions must not try to shrink VCF record. new_start="
                 + str(new_start)
                 + ", new_end="
@@ -326,7 +322,7 @@ class VcfRecord:
         other var: pos=1, REF=C, ALT=T
         will change this var to be pos=1, REF=CGT, ALT=TGT,CGA"""
         if self.CHROM != other.CHROM:
-            raise Error(
+            raise Exception(
                 "Cannot merge two VCF records that lie on difference chromosomes\n"
                 + str(self)
                 + "\n"

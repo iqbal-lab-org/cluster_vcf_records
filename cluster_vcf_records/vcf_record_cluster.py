@@ -5,10 +5,6 @@ import logging
 from cluster_vcf_records import vcf_record
 
 
-class Error(Exception):
-    pass
-
-
 class VcfRecordCluster:
     def __init__(self, vcf_record=None, max_distance_between_variants=31):
         if vcf_record is None:
@@ -123,7 +119,7 @@ class VcfRecordCluster:
                     non_snps.append((record.POS, record.REF, alt))
 
         if len(chrom_names) != 1:
-            raise Error("Error! More than one CHROM found. Got:" + str(chrom_names))
+            raise Exception("Error! More than one CHROM found. Got:" + str(chrom_names))
         chrom_name = chrom_names.pop()
 
         # generate all the allele combinations from the SNPs.

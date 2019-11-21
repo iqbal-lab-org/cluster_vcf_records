@@ -92,7 +92,7 @@ class TestVcfFileRead(unittest.TestCase):
         )
 
         lines.append("#CHROM\twrong!")
-        with self.assertRaises(vcf_file_read.Error):
+        with self.assertRaises(Exception):
             vcf_file_read.get_sample_name_from_vcf_header_lines(lines)
 
         lines[-1] = "#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO"

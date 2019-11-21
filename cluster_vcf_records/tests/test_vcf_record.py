@@ -206,9 +206,9 @@ class TestVcfRecord(unittest.TestCase):
         self.assertEqual(1, record.POS)
         self.assertEqual(6, record.ref_end_pos())
         self.assertEqual(["GCGAGG", "GCTCAGG"], record.ALT)
-        with self.assertRaises(vcf_record.Error):
+        with self.assertRaises(Exception):
             record.add_flanking_seqs(ref_seq, 2, 10)
-        with self.assertRaises(vcf_record.Error):
+        with self.assertRaises(Exception):
             record.add_flanking_seqs(ref_seq, 0, 5)
 
     def test_merge_by_adding_new_alts(self):
