@@ -148,7 +148,8 @@ def vcf_file_has_at_least_one_record(infile):
         if line.startswith('#'):
             pass
         else:
-            record = vcf_record.VcfRecord(line)
+            # Check we can load a record
+            vcf_record.VcfRecord(line)
             pyfastaq.utils.close(f)
             return True
 

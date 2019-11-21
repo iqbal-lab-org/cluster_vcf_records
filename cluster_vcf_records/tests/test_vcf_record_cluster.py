@@ -122,7 +122,7 @@ class TestVcfRecordCluster(unittest.TestCase):
             Adding record 2 AFTER records 1 and 3, the fact that record 2 overlaps with record 1 is lost;
             and so is the bridging of all three.
         """
-        ref_seq = 'TTCGGCAGGCATT' # For the record.
+        # ref_seq = 'TTCGGCAGGCATT' # For the record.
         record_1 = vcf_record.VcfRecord('ref\t3\t.\tCGGCA\tC\t.\tPASS\tSVTPYPE=COMPLEX\tGT\t1/1')
         record_2 = vcf_record.VcfRecord('ref\t5\t.\tGCAGGCA\tGCTGGCT\t.\tPASS\tSVTPYPE=COMPLEX\tGT\t1/1')
         record_3 = vcf_record.VcfRecord('ref\t10\t.\tC\tA\t42.42\tPASS\tSVTPYPE=SNP\tGT\t1/1')

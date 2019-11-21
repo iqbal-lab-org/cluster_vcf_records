@@ -1,5 +1,4 @@
 import datetime
-import filecmp
 import os
 import unittest
 
