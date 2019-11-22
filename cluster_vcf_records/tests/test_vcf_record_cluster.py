@@ -142,23 +142,6 @@ class TestVcfRecordCluster(unittest.TestCase):
             expected, cluster.make_one_merged_vcf_record_for_gramtools(ref_seq)
         )
 
-    def test_record_with_zero_pos_valueerror_raised(self):
-        ref_seq = "AGCTATCTGCGTATTCGATC"
-        record_1 = vcf_record.VcfRecord(
-            "ref\t0\t.\tC\tCG\t42.42\tPASS\tSVTPYPE=INDEL\tGT\t1/1"
-        )
-        record_2 = vcf_record.VcfRecord(
-            "ref\t1\t.\tT\tA\t42.42\tPASS\tSVTPYPE=SNP\tGT\t1/1"
-        )
-
-        cluster = vcf_record_cluster.VcfRecordCluster(
-            vcf_record=record_1, max_distance_between_variants=1
-        )
-        cluster.add_vcf_record(record_2)
-
-        with self.assertRaises(ValueError):
-            cluster.make_one_merged_vcf_record_for_gramtools(ref_seq)
-
     def test_SeveralComplexRecords_CorrectClustering(self):
         """
         Here's an example where we have two complex records followed by a SNP.

@@ -33,6 +33,13 @@ class TestVcfRecord(unittest.TestCase):
         record = vcf_record.VcfRecord(line)
         self.assertEqual(record.FILTER, set())
 
+    def test_VcfRecord_constructor_bad_POS(self):
+        """test VcfRecord constructor with bad POS values"""
+        with self.assertRaises(ValueError):
+            vcf_record.VcfRecord("ref\t0\tid\tA\tG\t42.42\tPASS\t.")
+        with self.assertRaises(ValueError):
+            vcf_record.VcfRecord("ref\t-1\tid\tA\tG\t42.42\tPASS\t.")
+
     def test_str(self):
         """test __str__"""
         line = "ref_42\t11\tid_foo\tA\tG\t42.42\tPASS\tKMER=31;SVLEN=0;SVTYPE=SNP\tGT:COV:GT_CONF\t1/1:0,52:39.80"
@@ -50,7 +57,7 @@ class TestVcfRecord(unittest.TestCase):
     def test_ref_string_matches_ref_sequence(self):
         """test ref_string_matches_ref_sequence"""
         record = vcf_record.VcfRecord(
-            "ref_name\t-1\t.\tAGT\tG\tPASS\tSVTYPE=SNP\tGT\t1/1"
+            "ref_name\t1\t.\tAGT\tG\tPASS\tSVTYPE=SNP\tGT\t1/1"
         )
         self.assertFalse(record.ref_string_matches_ref_sequence("AG"))
         record = vcf_record.VcfRecord("ref_name\t3\t.\tA\tG\tPASS\tSVTYPE=SNP\tGT\t1/1")

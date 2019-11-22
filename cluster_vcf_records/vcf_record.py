@@ -22,6 +22,11 @@ class VcfRecord:
         except:
             raise Exception("Error reading line of vcf file:" + line)
 
+        if self.POS < 0:
+            raise ValueError(
+                f"POS value {self.POS + 1}, which is less than 1. Cannot continue. Line of VCF file:\n{line}"
+            )
+
         try:
             self.QUAL = float(self.QUAL)
         except:
