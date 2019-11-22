@@ -31,6 +31,7 @@ class VcfRecordCluster:
         """
         Query the current cluster boundaries allowing for a distance around them, and include vcf_record if it is inside.
         """
+        assert vcf_record.POS >= 0  # constructor should enforce this anyway
         record_end = vcf_record.POS + len(vcf_record.REF) - 1
         if len(self) == 0:
             self.vcf_records.append(vcf_record)
@@ -145,9 +146,13 @@ class VcfRecordCluster:
         for combination in itertools.product(*snp_nucleotides):
             alt_seq = list(ref_seq_for_vcf)
             for i, position in enumerate(snp_positions):
-                if position < 1:
+                # In a VCF file, POS is 1-based.
+                # We're storing POS in memory 0-based.
+                # Therefore we should never have position < 0.
+                # The VcfRecord constructor should prevent this, but check anyway
+                if position < 0:
                     raise ValueError(
-                        "POS value (%d) less than 1. Ensure VCF is valid." % position
+                        f"POS value ({position+1}) less than 1. Ensure VCF is valid."
                     )
                 alt_seq[position - final_start] = combination[i]
             alleles.add("".join(alt_seq))
