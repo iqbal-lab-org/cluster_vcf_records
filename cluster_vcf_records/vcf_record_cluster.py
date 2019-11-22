@@ -144,7 +144,6 @@ class VcfRecordCluster:
             return None
 
         for combination in itertools.product(*snp_nucleotides):
-            print("combination:", combination)
             alt_seq = list(ref_seq_for_vcf)
             for i, position in enumerate(snp_positions):
                 # In a VCF file, POS is 1-based.
