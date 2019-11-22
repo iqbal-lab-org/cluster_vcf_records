@@ -4,7 +4,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="cluster_vcf_records",
-    version="0.10.0",
+    version="0.10.1",
     description="Package to cluster VCF records. For use by gramtools and minos",
     packages=find_packages(),
     author="Martin Hunt",
