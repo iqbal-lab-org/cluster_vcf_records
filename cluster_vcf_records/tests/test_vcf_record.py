@@ -33,6 +33,20 @@ class TestVcfRecord(unittest.TestCase):
         record = vcf_record.VcfRecord(line)
         self.assertEqual(record.FILTER, set())
 
+    def test_GT_always_printed_first_when_present(self):
+        """test GT always printed first when present"""
+        line1 = "ref\t11\tid\tA\tG\t42.0\tPASS\t.\tGT:COV:GT_CONF\t1/1:0,52:39.80"
+        line2 = "ref\t11\tid\tA\tG\t42.0\tPASS\t.\tCOV:GT:GT_CONF\t0,52:1/1:39.80"
+        vcf = vcf_record.VcfRecord(line1)
+        self.assertEqual(line1, str(vcf))
+        vcf = vcf_record.VcfRecord(line2)
+        self.assertEqual(line1, str(vcf))
+        line3 = "ref\t11\tid\tA\tG\t42.0\tPASS\t.\tCOV:GT_CONF\t0,52:39.80"
+        vcf = vcf_record.VcfRecord(line3)
+        self.assertEqual(line3, str(vcf))
+        vcf.set_format_key_value("GT", "1/1")
+        self.assertEqual(line1, str(vcf))
+
     def test_VcfRecord_constructor_bad_POS(self):
         """test VcfRecord constructor with bad POS values"""
         with self.assertRaises(ValueError):
