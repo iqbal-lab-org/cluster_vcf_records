@@ -1,6 +1,15 @@
 language: python
 python:
-  - "3.6"
+- '3.6'
 sudo: false
+
 script:
-  - "python setup.py test"
+- python setup.py test
+
+deploy:
+  provider: pypi
+  user: __token__
+  password:
+    secure: rgjdmEKbC/GPs/iIefdpBGV2E0SLF65+v+TklvG4F8gPJ1eBJBqixrj+uch+THawArsJZk7BeuqC+A2I22ZrQiRhmRyuwhDuW6YfXlQNRQBWsooCnag4sXy9gQzDT17fLYiIqN+5z9OpchpP5Fy42pET1s5r4OxKjiaW18RceFT9oI0mYIpfA0FBJ/asSrQaiQ+EBPRSnlQQ+UuQOWE/8GfHacFeiiGuAnPOxq+SljRTE4kwlT05iMTRPjyFyXSLQQCaYSYC3FUNkEd99MkTZ2k8iMi16hjY+A/rPyPqUp1IHOGIHSsNWhtvyGLFNBAOAQLS8tmLRmZ+WLLYuZQsCn3nKu2BU8m3jm5cMv4JshXDorFAvoh+gHrAsCh2LjMgPtNaK4aqn12B7vKmmCqqaC1yvDMfkjkGTHUFV+G0bNra1UEdA/e1+xF5EIHNp3KuprFmN5Y++WlvX9aZcZAJY6cCzkwtzFxGs9Gi+Q6qcZakE85NPzQrd1ikwuXpmQv8YygtMSl91tHKidxX+GUCrC0vHHUg3TtCiJbT0G2yHpdh6XkkQ1XOcmOvJ+JnT5tctPqmBsTFF/oF7iuIzV4Ek4ym6KacaRQHe3zXVAreoMCQwwgarCq00WluqBOYZl+eGiIC07VcELfMIcdX0FPIp0bdXozqHe6DFz6GufKr+YM=
+  on:
+    tags: true
