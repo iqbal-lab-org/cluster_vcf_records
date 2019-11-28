@@ -1,3 +1,4 @@
+from collections import OrderedDict
 import copy
 import operator
 
@@ -43,13 +44,13 @@ class VcfRecord:
                     self.INFO[field] = None
 
         if len(fields) == 10:
-            FORMAT = fields[8]
-            FORMAT_VALS = fields[9]
-            self.format_keys = FORMAT.split(":")
-            format_vals = FORMAT_VALS.split(":")
-            self.FORMAT = dict(zip(self.format_keys, format_vals))
+            format_keys = fields[8].split(":")
+            format_vals = fields[9].split(":")
+            self.FORMAT = OrderedDict(zip(format_keys, format_vals))
+            if "GT" in self.FORMAT:
+                self.FORMAT.move_to_end("GT", last=False)
         else:
-            self.format_keys = self.FORMAT = None
+            self.FORMAT = OrderedDict()
 
     def __eq__(self, other):
         return type(other) is type(self) and self.__dict__ == other.__dict__
@@ -77,10 +78,9 @@ class VcfRecord:
             info_string,
         ]
 
-        if self.format_keys is not None:
-            format_string = ":".join(self.format_keys)
-            format_values = ":".join([self.FORMAT[x] for x in self.format_keys])
-            fields.extend([format_string, format_values])
+        if len(self.FORMAT) > 0:
+            fields.append(":".join(self.FORMAT.keys()))
+            fields.append(":".join(self.FORMAT.values()))
 
         return "\t".join(fields)
 
@@ -131,12 +131,9 @@ class VcfRecord:
         """Add a new key/value pair. Key in column 9 (FORMAT)
         and value in column 10. If key already exists, then updates
         the value to the new given value"""
-        if self.format_keys is None:
-            self.format_keys = []
-            self.FORMAT = {}
-        if key not in self.FORMAT:
-            self.format_keys.append(key)
         self.FORMAT[key] = value
+        if key == "GT":
+            self.FORMAT.move_to_end(key, last=False)
 
     def intersects(self, other):
         """Returns True iff this record's reference positions overlap
