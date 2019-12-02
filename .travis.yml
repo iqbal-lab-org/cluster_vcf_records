@@ -8,8 +8,7 @@ script:
 
 deploy:
   provider: pypi
-  user: __token__
-  password:
-    secure: "HMPgT/qAikwIVXIuBH8CksqsvOmjLk9CR1cTSlCXVkqBKYY2v97T0GdqEhW3md0jwNxx4+Kp46v2vuFwL7ycw2prD6q+5lPRemdR9C2cNbOyb2KfNT7HlhvaZCmpzkEbOZjQTU29qsG5jbbLqWFmkKZWgrxdWC2qBSlauVWHpO1vJJDTCYKm+7s861OGL31WWRpF9KC/XnDXqi85IY6IfQ0UJHITheANjEChxx5vx/uVjIujMBeP/UdZTofamjfyBN+A/CfXMAP6aoLoI3HbAOrqd/nofHUDlJFlSi+esLuqA4DlVAIweXT0M5DJwe0ZUaeo7maQp2ZUFDFoqFoneFvcnG9RrkmwkFIFhqvKJJ1FArYwINGhuJB19Jov/U8ZrW7hcXdbCb7Eo8/0OpeDLHKWMviUh8tBdc6Kp2vBoIGJXThfsKKvijrIwEUqd3DnNAld9/v0Kua135zwyp1vomrujLyAhzGQuBvENHIhwUlMaB2z0PtmYxqStCkxZ6MdK7vhnbMONwo2UVZzxzEez9atGKelPmM0tpO29Z6Mb5CekxBsBhKDnrRioYorhTOywQRPYwGdcMBEBNm9Dd+I7aluvL/CtTvaajrUaAWXinx4vMTEAuHN3BeDKpOdQ15a8DwgKrRRDi2xB/MQqFwPKv6Fje77YuqdGoUYyOyiugw="
+  user: $PYPI_USER
+  password: $PYPI_PWD
   on:
     tags: true
