@@ -1,5 +1,6 @@
 #file1 header1
 #file1 header2
+ref.1	-1	id1	A	T	PASS	SVTYPE=SNP	GT	1/1
 ref.1	10	id1	A	T	PASS	SVTYPE=SNP	GT	1/1
 ref.2	42	id2	G	C	PASS	SVTYPE=SNP	GT	1/1
 ref.1	5	id3	G	A	PASS	SVTYPE=SNP	GT	1/0
