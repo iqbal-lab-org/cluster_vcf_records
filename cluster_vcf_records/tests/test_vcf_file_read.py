@@ -37,21 +37,27 @@ class TestVcfFileRead(unittest.TestCase):
         }
 
         infile = os.path.join(data_dir, "vcf_file_to_dict.vcf")
-        got_header, got_records = vcf_file_read.vcf_file_to_dict(infile)
+        with self.assertRaises(ValueError):
+            got_header, got_records = vcf_file_read.vcf_file_to_dict(
+                infile, error_on_bad_POS=True
+            )
+        got_header, got_records = vcf_file_read.vcf_file_to_dict(
+            infile, error_on_bad_POS=False
+        )
         self.assertEqual(expected_records, got_records)
         self.assertEqual(expected_header, got_header)
 
         del expected_records["ref_44"]
         infile = os.path.join(data_dir, "vcf_file_to_dict.vcf")
         got_header, got_records = vcf_file_read.vcf_file_to_dict(
-            infile, reference_seqs=ref_seqs
+            infile, reference_seqs=ref_seqs, error_on_bad_POS=False
         )
         self.assertEqual(expected_records, got_records)
         self.assertEqual(expected_header, got_header)
 
         infile = os.path.join(data_dir, "vcf_file_to_dict.vcf.gz")
         got_header, got_records = vcf_file_read.vcf_file_to_dict(
-            infile, reference_seqs=ref_seqs
+            infile, reference_seqs=ref_seqs, error_on_bad_POS=False
         )
         self.assertEqual(expected_records, got_records)
         self.assertEqual(expected_header, got_header)
@@ -60,7 +66,10 @@ class TestVcfFileRead(unittest.TestCase):
         expected_records["ref_43"][-1].remove_asterisk_alts()
         infile = os.path.join(data_dir, "vcf_file_to_dict.vcf")
         got_header, got_records = vcf_file_read.vcf_file_to_dict(
-            infile, remove_asterisk_alts=True, reference_seqs=ref_seqs
+            infile,
+            remove_asterisk_alts=True,
+            reference_seqs=ref_seqs,
+            error_on_bad_POS=False,
         )
         self.assertEqual(expected_records, got_records)
         self.assertEqual(expected_header, got_header)
