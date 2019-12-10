@@ -19,6 +19,7 @@ def vcf_file_to_dict(
     min_dp4=None,
     min_GT_conf=None,
     reference_seqs=None,
+    error_on_bad_POS=True,
 ):
     header_lines = []
     records = {}
@@ -42,7 +43,15 @@ def vcf_file_to_dict(
             header_lines.append(line.rstrip())
             continue
 
-        record = vcf_record.VcfRecord(line)
+        try:
+            record = vcf_record.VcfRecord(line)
+        except ValueError as err:
+            if error_on_bad_POS:
+                raise
+            else:
+                logging.warn(f"Skipping bad VCF record: {line}")
+                continue
+
         if reference_seqs is not None and not (
             record.ref_string_matches_dict_of_ref_sequences(reference_seqs)
         ):

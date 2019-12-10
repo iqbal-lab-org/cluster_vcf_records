@@ -119,6 +119,7 @@ class VcfClusterer:
                 min_dp4=min_dp4,
                 min_GT_conf=min_GT_conf,
                 reference_seqs=reference_seqs,
+                error_on_bad_POS=False,
             )
 
             new_sample_name = vcf_file_read.get_sample_name_from_vcf_header_lines(
