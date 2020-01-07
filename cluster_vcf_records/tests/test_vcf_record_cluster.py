@@ -30,11 +30,12 @@ class TestVcfRecordCluster(unittest.TestCase):
         )
 
         # First test when cluster_boundary_size is zero, adjacent records
-        # do not get merged
+        # do not get put in the same cluster, but the same record does
         cluster = vcf_record_cluster.VcfRecordCluster(cluster_boundary_size=0)
         self.assertEqual(0, len(cluster))
         self.assertTrue(cluster.add_vcf_record(record1))
         self.assertFalse(cluster.add_vcf_record(record2))
+        self.assertTrue(cluster.add_vcf_record(record1))
 
         cluster = vcf_record_cluster.VcfRecordCluster(cluster_boundary_size=3)
         self.assertEqual(0, len(cluster))
