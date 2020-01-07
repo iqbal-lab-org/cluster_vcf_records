@@ -6,7 +6,7 @@ from cluster_vcf_records import vcf_record
 
 
 class VcfRecordCluster:
-    def __init__(self, vcf_record=None, max_distance_between_variants=31):
+    def __init__(self, vcf_record=None, cluster_boundary_size=0):
         if vcf_record is None:
             self.vcf_records = []
             self.start = None
@@ -16,7 +16,7 @@ class VcfRecordCluster:
             self.start = vcf_record.POS
             self.end = self.start + len(vcf_record.REF) - 1
 
-        self.max_distance_between_variants = max_distance_between_variants
+        self.cluster_boundary_size = cluster_boundary_size
 
     def __getitem__(self, i):
         return self.vcf_records[i]
@@ -43,9 +43,9 @@ class VcfRecordCluster:
             # Here not making assumption that vcf_record's POS is >= self.start; yet for records processed in sorted order,
             # this should be the case.
             if (
-                self.start - self.max_distance_between_variants
+                self.start - self.cluster_boundary_size
                 <= vcf_record.POS
-                <= self.end + self.max_distance_between_variants
+                <= self.end + self.cluster_boundary_size
             ):
                 self.vcf_records.append(vcf_record)
 
