@@ -115,25 +115,25 @@ class TestVcfClusterer(unittest.TestCase):
         )
         record_list = [record1, record2, record3, record4, record5]
         cluster1 = vcf_record_cluster.VcfRecordCluster(
-            vcf_record=record1, max_distance_between_variants=3
+            vcf_record=record1, cluster_boundary_size=3
         )
         self.assertTrue(cluster1.add_vcf_record(record2))
         self.assertTrue(cluster1.add_vcf_record(record3))
         cluster2 = vcf_record_cluster.VcfRecordCluster(
-            vcf_record=record4, max_distance_between_variants=3
+            vcf_record=record4, cluster_boundary_size=3
         )
         self.assertTrue(cluster2.add_vcf_record(record5))
         expected = [cluster1, cluster2]
         got = vcf_clusterer.VcfClusterer._cluster_vcf_record_list(
-            record_list, max_distance_between_variants=3
+            record_list, cluster_boundary_size=3
         )
         self.assertEqual(expected, got)
 
-        cluster1.max_distance_between_variants = 5
+        cluster1.cluster_boundary_size = 5
         self.assertTrue(cluster1.add_vcf_record(record4))
         self.assertTrue(cluster1.add_vcf_record(record5))
         got = vcf_clusterer.VcfClusterer._cluster_vcf_record_list(
-            record_list, max_distance_between_variants=5
+            record_list, cluster_boundary_size=5
         )
         self.assertEqual([cluster1], got)
 
@@ -151,6 +151,7 @@ class TestVcfClusterer(unittest.TestCase):
             tmp_out,
             source="source_name",
             max_alleles_per_cluster=8,
+            cluster_boundary_size=1,
         )
         clusterer.run()
         expected_vcf = os.path.join(
@@ -165,6 +166,7 @@ class TestVcfClusterer(unittest.TestCase):
             tmp_out,
             source="source_name",
             max_alleles_per_cluster=100,
+            cluster_boundary_size=1,
         )
         clusterer.run()
         expected_vcf = os.path.join(
@@ -182,7 +184,8 @@ class TestVcfClusterer(unittest.TestCase):
         ref_fasta = os.path.join(data_dir, "run.simple_merge.ref.fa")
         tmp_out = "tmp.vcf_clusterer.run.simple_merge.out.vcf"
         clusterer = vcf_clusterer.VcfClusterer(
-            vcf_files, ref_fasta, tmp_out, source="source_name", merge_method="simple"
+            vcf_files, ref_fasta, tmp_out, source="source_name", merge_method="simple",
+            cluster_boundary_size=1,
         )
         clusterer.run()
         expected_vcf = os.path.join(data_dir, "run.simple_merge.out.vcf")
@@ -198,7 +201,8 @@ class TestVcfClusterer(unittest.TestCase):
         ref_fasta = os.path.join(data_dir, "run.gt_aware_merge.ref.fa")
         tmp_out = "tmp.vcf_clusterer.run.gt_aware_merge.out.vcf"
         clusterer = vcf_clusterer.VcfClusterer(
-            vcf_files, ref_fasta, tmp_out, source="source_name", merge_method="gt_aware"
+            vcf_files, ref_fasta, tmp_out, source="source_name", merge_method="gt_aware",
+            cluster_boundary_size=1,
         )
         clusterer.run()
         expected_vcf = os.path.join(data_dir, "run.gt_aware_merge.out.vcf")
