@@ -29,6 +29,13 @@ class TestVcfRecordCluster(unittest.TestCase):
             "ref_42\t23\tid_2\tC\tG\t42.42\tPASS\tKMER=31;SVLEN=0;SVTYPE=SNP\tGT:COV:GT_CONF\t1/1:0,52:39.80"
         )
 
+        # First test when cluster_boundary_size is zero, adjacent records
+        # do not get merged
+        cluster = vcf_record_cluster.VcfRecordCluster(cluster_boundary_size=0)
+        self.assertEqual(0, len(cluster))
+        self.assertTrue(cluster.add_vcf_record(record1))
+        self.assertFalse(cluster.add_vcf_record(record2))
+
         cluster = vcf_record_cluster.VcfRecordCluster(cluster_boundary_size=3)
         self.assertEqual(0, len(cluster))
         self.assertTrue(cluster.add_vcf_record(record1))
