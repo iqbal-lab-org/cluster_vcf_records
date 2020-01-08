@@ -18,9 +18,9 @@ class VcfClusterer:
         vcf_outfile: name of output VCF file
 
     Optional parameters:
-        max_distance_between_variants: Any variants that are this distance or
-           closer will be put in the same cluster. The default of 1 means
-           that only adjacent (or overlapping) variants are clustered
+        cluster_boundary_size: Any variants that are within this distance of a cluster 
+           start & end positional boundaries will be put in that cluster. 
+           The default of 0 means that only overlapping variants are clustered.
         homozygous_only: Set this to True to only load homozygous variants from
            the input VCF files, ie where the genotype is 1/1.
         max_REF_len: When loading the VCF files, any records with REF longer
@@ -45,7 +45,7 @@ class VcfClusterer:
         vcf_files,
         reference_fasta,
         vcf_outfile,
-        max_distance_between_variants=1,
+        cluster_boundary_size=0,
         homozygous_only=False,
         max_REF_len=None,
         max_alleles_per_cluster=None,
@@ -67,7 +67,7 @@ class VcfClusterer:
         for seq in self.reference_seqs.values():
             seq.seq = seq.seq.upper()
         self.vcf_outfile = vcf_outfile
-        self.max_distance_between_variants = max_distance_between_variants
+        self.cluster_boundary_size = cluster_boundary_size
         self.homozygous_only = homozygous_only
         self.source = source
         self.max_REF_len = max_REF_len
@@ -200,10 +200,10 @@ class VcfClusterer:
         return new_vcf_records
 
     @classmethod
-    def _cluster_vcf_record_list(cls, vcf_records, max_distance_between_variants=1):
+    def _cluster_vcf_record_list(cls, vcf_records, cluster_boundary_size=0):
         new_cluster_list = [
             vcf_record_cluster.VcfRecordCluster(
-                max_distance_between_variants=max_distance_between_variants
+                cluster_boundary_size=cluster_boundary_size
             )
         ]
 
@@ -214,8 +214,7 @@ class VcfClusterer:
 
             if not successfully_added:  # Make a new cluster
                 new_cluster = vcf_record_cluster.VcfRecordCluster(
-                    vcf_record=vcf_record,
-                    max_distance_between_variants=max_distance_between_variants,
+                    vcf_record=vcf_record, cluster_boundary_size=cluster_boundary_size,
                 )
                 new_cluster_list.append(new_cluster)
 
@@ -256,8 +255,7 @@ class VcfClusterer:
                 )
 
                 cluster_list = VcfClusterer._cluster_vcf_record_list(
-                    rmdup_list,
-                    max_distance_between_variants=self.max_distance_between_variants,
+                    rmdup_list, cluster_boundary_size=self.cluster_boundary_size,
                 )
 
                 for cluster in cluster_list:
@@ -277,7 +275,7 @@ class VcfClusterer:
             elif self.merge_method == "simple":
                 cluster_list = VcfClusterer._cluster_vcf_record_list(
                     vcf_records[ref_name],
-                    max_distance_between_variants=self.max_distance_between_variants,
+                    cluster_boundary_size=self.cluster_boundary_size,
                 )
                 for cluster in cluster_list:
                     clustered_vcf = cluster.make_simple_merged_vcf_with_no_combinations(
@@ -288,7 +286,7 @@ class VcfClusterer:
             elif self.merge_method == "gt_aware":
                 cluster_list = VcfClusterer._cluster_vcf_record_list(
                     vcf_records[ref_name],
-                    max_distance_between_variants=self.max_distance_between_variants,
+                    cluster_boundary_size=self.cluster_boundary_size,
                 )
                 for cluster in cluster_list:
                     clustered_vcf = cluster.make_simple_gt_aware_merged_vcf_with_no_combinations(

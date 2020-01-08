@@ -29,7 +29,15 @@ class TestVcfRecordCluster(unittest.TestCase):
             "ref_42\t23\tid_2\tC\tG\t42.42\tPASS\tKMER=31;SVLEN=0;SVTYPE=SNP\tGT:COV:GT_CONF\t1/1:0,52:39.80"
         )
 
-        cluster = vcf_record_cluster.VcfRecordCluster(max_distance_between_variants=3)
+        # First test when cluster_boundary_size is zero, adjacent records
+        # do not get put in the same cluster, but the same record does
+        cluster = vcf_record_cluster.VcfRecordCluster(cluster_boundary_size=0)
+        self.assertEqual(0, len(cluster))
+        self.assertTrue(cluster.add_vcf_record(record1))
+        self.assertFalse(cluster.add_vcf_record(record2))
+        self.assertTrue(cluster.add_vcf_record(record1))
+
+        cluster = vcf_record_cluster.VcfRecordCluster(cluster_boundary_size=3)
         self.assertEqual(0, len(cluster))
         self.assertTrue(cluster.add_vcf_record(record1))
         self.assertEqual(1, len(cluster))
@@ -39,7 +47,7 @@ class TestVcfRecordCluster(unittest.TestCase):
         self.assertEqual(3, len(cluster))
         self.assertFalse(cluster.add_vcf_record(record4))
         self.assertEqual(3, len(cluster))
-        cluster.max_distance_between_variants = 5
+        cluster.cluster_boundary_size = 5
         self.assertTrue(cluster.add_vcf_record(record4))
         self.assertEqual(4, len(cluster))
         self.assertTrue(cluster.add_vcf_record(record5))
@@ -47,7 +55,7 @@ class TestVcfRecordCluster(unittest.TestCase):
 
     def test_start_and_end(self):
         """test start_and_end"""
-        cluster = vcf_record_cluster.VcfRecordCluster(max_distance_between_variants=3)
+        cluster = vcf_record_cluster.VcfRecordCluster(cluster_boundary_size=3)
         self.assertEqual((None, None), cluster.start_and_end())
         record1 = vcf_record.VcfRecord(
             "ref_42\t11\tid_1\tA\tG\t42.42\tPASS\tKMER=31;SVLEN=0;SVTYPE=SNP\tGT:COV:GT_CONF\t1/1:0,52:39.80"
@@ -68,7 +76,7 @@ class TestVcfRecordCluster(unittest.TestCase):
             "ref\t10\t.\tC\tG\t42.42\t.\tSVTYPE=SNP\tGT\t1/1"
         )
         cluster = vcf_record_cluster.VcfRecordCluster(
-            vcf_record=record1, max_distance_between_variants=2
+            vcf_record=record1, cluster_boundary_size=2
         )
 
         # If there's only one record, then we should just get that one back,
@@ -84,7 +92,7 @@ class TestVcfRecordCluster(unittest.TestCase):
             "ref\t12\t.\tT\tC,A\t42.42\tPASS\tSVTYPE=SNP\tGT\t1/1"
         )
         cluster = vcf_record_cluster.VcfRecordCluster(
-            vcf_record=record2, max_distance_between_variants=2
+            vcf_record=record2, cluster_boundary_size=2
         )
         self.assertEqual(
             record2, cluster.make_one_merged_vcf_record_for_gramtools(ref_seq)
@@ -132,7 +140,7 @@ class TestVcfRecordCluster(unittest.TestCase):
             "ref\t4\t.\tT\tA\t42.42\tPASS\tSVTPYPE=SNP\tGT\t1/1"
         )
         cluster = vcf_record_cluster.VcfRecordCluster(
-            vcf_record=record5, max_distance_between_variants=1
+            vcf_record=record5, cluster_boundary_size=1
         )
         self.assertTrue(cluster.add_vcf_record(record6))
         expected = vcf_record.VcfRecord(
@@ -173,18 +181,18 @@ class TestVcfRecordCluster(unittest.TestCase):
         )
 
         Two_clusters = vcf_clusterer.VcfClusterer._cluster_vcf_record_list(
-            [record_1, record_3], max_distance_between_variants=1
+            [record_1, record_3], cluster_boundary_size=1
         )
         self.assertEqual(len(Two_clusters), 2)
 
         One_cluster = vcf_clusterer.VcfClusterer._cluster_vcf_record_list(
-            [record_1, record_2, record_3], max_distance_between_variants=1
+            [record_1, record_2, record_3], cluster_boundary_size=1
         )
 
         self.assertEqual(len(One_cluster), 1)
 
         Three_clusters = vcf_clusterer.VcfClusterer._cluster_vcf_record_list(
-            [record_1, record_3, record_2], max_distance_between_variants=1
+            [record_1, record_3, record_2], cluster_boundary_size=1
         )
         self.assertEqual(len(Three_clusters), 3)
 
@@ -200,7 +208,7 @@ class TestVcfRecordCluster(unittest.TestCase):
         record3 = vcf_record.VcfRecord(
             "ref\t8\t.\tT\tA\t21.4018\t.\t.\tSVTYPE=MERGED\tGT\t1/1"
         )
-        cluster = vcf_record_cluster.VcfRecordCluster(vcf_record=record1)
+        cluster = vcf_record_cluster.VcfRecordCluster(vcf_record=record1, cluster_boundary_size=8)
         self.assertTrue(cluster.add_vcf_record(record2))
         self.assertTrue(cluster.add_vcf_record(record3))
         cluster.make_simple_merged_vcf_with_no_combinations(ref_seq)
@@ -229,7 +237,7 @@ class TestVcfRecordCluster(unittest.TestCase):
             "ref\t4\t.\tT\tA\t42.42\tPASS\tSVTPYPE=SNP\tGT\t1/1"
         )
         cluster = vcf_record_cluster.VcfRecordCluster(
-            vcf_record=record1, max_distance_between_variants=1
+            vcf_record=record1, cluster_boundary_size=1
         )
         self.assertTrue(cluster.add_vcf_record(record2))
         cluster.make_simple_merged_vcf_with_no_combinations(ref_seq)
@@ -251,7 +259,7 @@ class TestVcfRecordCluster(unittest.TestCase):
         record3 = vcf_record.VcfRecord(
             "ref\t8\t.\tT\tA\t21.4018\t.\tSVTYPE=MERGED\tGT\t1/1"
         )
-        cluster = vcf_record_cluster.VcfRecordCluster(vcf_record=record1)
+        cluster = vcf_record_cluster.VcfRecordCluster(vcf_record=record1, cluster_boundary_size=8)
         self.assertTrue(cluster.add_vcf_record(record2))
         self.assertTrue(cluster.add_vcf_record(record3))
         cluster.make_simple_gt_aware_merged_vcf_with_no_combinations(ref_seq)
@@ -279,7 +287,7 @@ class TestVcfRecordCluster(unittest.TestCase):
         record3 = vcf_record.VcfRecord(
             "ref\t8\t.\tT\tA\t21.4018\t.\tSVTYPE=MERGED\tGT\t0/0"
         )
-        cluster = vcf_record_cluster.VcfRecordCluster(vcf_record=record1)
+        cluster = vcf_record_cluster.VcfRecordCluster(vcf_record=record1, cluster_boundary_size=8)
         self.assertTrue(cluster.add_vcf_record(record2))
         self.assertTrue(cluster.add_vcf_record(record3))
         cluster.make_simple_gt_aware_merged_vcf_with_no_combinations(ref_seq)
@@ -300,7 +308,7 @@ class TestVcfRecordCluster(unittest.TestCase):
         record3 = vcf_record.VcfRecord(
             "ref\t8\t.\tT\tA\t21.4018\t.\tSVTYPE=MERGED\tGT\t0/0"
         )
-        cluster = vcf_record_cluster.VcfRecordCluster(vcf_record=record1)
+        cluster = vcf_record_cluster.VcfRecordCluster(vcf_record=record1, cluster_boundary_size=8)
         self.assertTrue(cluster.add_vcf_record(record2))
         self.assertTrue(cluster.add_vcf_record(record3))
         cluster.make_simple_gt_aware_merged_vcf_with_no_combinations(ref_seq)
@@ -322,7 +330,7 @@ class TestVcfRecordCluster(unittest.TestCase):
             "ref\t4\t.\tT\tA\t42.42\tPASS\tSVTPYPE=SNP\tGT\t1/1"
         )
         cluster = vcf_record_cluster.VcfRecordCluster(
-            vcf_record=record1, max_distance_between_variants=1
+            vcf_record=record1, cluster_boundary_size=1
         )
         self.assertTrue(cluster.add_vcf_record(record2))
         cluster.make_simple_gt_aware_merged_vcf_with_no_combinations(ref_seq)
@@ -343,7 +351,7 @@ class TestVcfRecordCluster(unittest.TestCase):
         deletion = vcf_record.VcfRecord("ref\t3\t.\tCTAGGTCA\tG\t.\t.\t.\t.")
         insertion = vcf_record.VcfRecord("ref\t5\t.\tA\tATT\t.\t.\t.\t.")
         cluster = vcf_record_cluster.VcfRecordCluster(
-            vcf_record=deletion, max_distance_between_variants=1
+            vcf_record=deletion, cluster_boundary_size=1
         )
         self.assertTrue(cluster.add_vcf_record(snp1))
         self.assertTrue(cluster.add_vcf_record(snp2))
