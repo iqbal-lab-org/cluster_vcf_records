@@ -26,9 +26,11 @@ class TestVcfClusterer(unittest.TestCase):
         }
 
         expected_sample = "sample"
-        got_sample, got_headers, got_records = vcf_clusterer.VcfClusterer._load_vcf_files(
-            [vcf_file_1], None
-        )
+        (
+            got_sample,
+            got_headers,
+            got_records,
+        ) = vcf_clusterer.VcfClusterer._load_vcf_files([vcf_file_1], None)
         self.assertEqual(expected_sample, got_sample)
         self.assertEqual(expected_headers, got_headers)
         self.assertEqual(expected_records, got_records)
@@ -45,9 +47,11 @@ class TestVcfClusterer(unittest.TestCase):
             1, vcf_record.VcfRecord("ref.1\t8\tid4\tC\tG\tPASS\tSVTYPE=SNP\tGT\t1/1")
         )
         expected_sample = "sample_from_vcf_2"
-        got_sample, got_headers, got_records = vcf_clusterer.VcfClusterer._load_vcf_files(
-            [vcf_file_1, vcf_file_2], None
-        )
+        (
+            got_sample,
+            got_headers,
+            got_records,
+        ) = vcf_clusterer.VcfClusterer._load_vcf_files([vcf_file_1, vcf_file_2], None)
         self.assertEqual(expected_sample, got_sample)
         self.assertEqual(expected_headers, got_headers)
         self.assertEqual(expected_records, got_records)
@@ -184,7 +188,11 @@ class TestVcfClusterer(unittest.TestCase):
         ref_fasta = os.path.join(data_dir, "run.simple_merge.ref.fa")
         tmp_out = "tmp.vcf_clusterer.run.simple_merge.out.vcf"
         clusterer = vcf_clusterer.VcfClusterer(
-            vcf_files, ref_fasta, tmp_out, source="source_name", merge_method="simple",
+            vcf_files,
+            ref_fasta,
+            tmp_out,
+            source="source_name",
+            merge_method="simple",
             cluster_boundary_size=1,
         )
         clusterer.run()
@@ -201,7 +209,11 @@ class TestVcfClusterer(unittest.TestCase):
         ref_fasta = os.path.join(data_dir, "run.gt_aware_merge.ref.fa")
         tmp_out = "tmp.vcf_clusterer.run.gt_aware_merge.out.vcf"
         clusterer = vcf_clusterer.VcfClusterer(
-            vcf_files, ref_fasta, tmp_out, source="source_name", merge_method="gt_aware",
+            vcf_files,
+            ref_fasta,
+            tmp_out,
+            source="source_name",
+            merge_method="gt_aware",
             cluster_boundary_size=1,
         )
         clusterer.run()

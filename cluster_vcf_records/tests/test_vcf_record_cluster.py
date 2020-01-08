@@ -208,7 +208,9 @@ class TestVcfRecordCluster(unittest.TestCase):
         record3 = vcf_record.VcfRecord(
             "ref\t8\t.\tT\tA\t21.4018\t.\t.\tSVTYPE=MERGED\tGT\t1/1"
         )
-        cluster = vcf_record_cluster.VcfRecordCluster(vcf_record=record1, cluster_boundary_size=8)
+        cluster = vcf_record_cluster.VcfRecordCluster(
+            vcf_record=record1, cluster_boundary_size=8
+        )
         self.assertTrue(cluster.add_vcf_record(record2))
         self.assertTrue(cluster.add_vcf_record(record3))
         cluster.make_simple_merged_vcf_with_no_combinations(ref_seq)
@@ -259,7 +261,9 @@ class TestVcfRecordCluster(unittest.TestCase):
         record3 = vcf_record.VcfRecord(
             "ref\t8\t.\tT\tA\t21.4018\t.\tSVTYPE=MERGED\tGT\t1/1"
         )
-        cluster = vcf_record_cluster.VcfRecordCluster(vcf_record=record1, cluster_boundary_size=8)
+        cluster = vcf_record_cluster.VcfRecordCluster(
+            vcf_record=record1, cluster_boundary_size=8
+        )
         self.assertTrue(cluster.add_vcf_record(record2))
         self.assertTrue(cluster.add_vcf_record(record3))
         cluster.make_simple_gt_aware_merged_vcf_with_no_combinations(ref_seq)
@@ -287,7 +291,9 @@ class TestVcfRecordCluster(unittest.TestCase):
         record3 = vcf_record.VcfRecord(
             "ref\t8\t.\tT\tA\t21.4018\t.\tSVTYPE=MERGED\tGT\t0/0"
         )
-        cluster = vcf_record_cluster.VcfRecordCluster(vcf_record=record1, cluster_boundary_size=8)
+        cluster = vcf_record_cluster.VcfRecordCluster(
+            vcf_record=record1, cluster_boundary_size=8
+        )
         self.assertTrue(cluster.add_vcf_record(record2))
         self.assertTrue(cluster.add_vcf_record(record3))
         cluster.make_simple_gt_aware_merged_vcf_with_no_combinations(ref_seq)
@@ -308,7 +314,9 @@ class TestVcfRecordCluster(unittest.TestCase):
         record3 = vcf_record.VcfRecord(
             "ref\t8\t.\tT\tA\t21.4018\t.\tSVTYPE=MERGED\tGT\t0/0"
         )
-        cluster = vcf_record_cluster.VcfRecordCluster(vcf_record=record1, cluster_boundary_size=8)
+        cluster = vcf_record_cluster.VcfRecordCluster(
+            vcf_record=record1, cluster_boundary_size=8
+        )
         self.assertTrue(cluster.add_vcf_record(record2))
         self.assertTrue(cluster.add_vcf_record(record3))
         cluster.make_simple_gt_aware_merged_vcf_with_no_combinations(ref_seq)
