@@ -18,8 +18,8 @@ class VcfClusterer:
         vcf_outfile: name of output VCF file
 
     Optional parameters:
-        cluster_boundary_size: Any variants that are within this distance of a cluster 
-           start & end positional boundaries will be put in that cluster. 
+        cluster_boundary_size: Any variants that are within this distance of a cluster
+           start & end positional boundaries will be put in that cluster.
            The default of 0 means that only overlapping variants are clustered.
         homozygous_only: Set this to True to only load homozygous variants from
            the input VCF files, ie where the genotype is 1/1.
@@ -178,10 +178,6 @@ class VcfClusterer:
         are the same within indel_gap nucleotides of each other"""
         expanded_vcf_records = VcfClusterer._expand_alts_in_vcf_record_list(vcf_records)
         new_vcf_records = [x for x in expanded_vcf_records if not x.is_snp()]
-
-        # Because the routine below is worse-case quadratic, we refuse to do it if it implies > ~100 million calls
-        if len(new_vcf_records) > 10000:
-            return expanded_vcf_records
 
         for i in range(len(new_vcf_records) - 1):
             j = i + 1
