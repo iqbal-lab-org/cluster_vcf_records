@@ -49,7 +49,7 @@ def vcf_file_to_dict(
             if error_on_bad_POS:
                 raise
             else:
-                logging.warn(f"Skipping bad VCF record: {line}")
+                logging.warning(f"Skipping bad VCF record: {line}")
                 continue
 
         if reference_seqs is not None and not (
