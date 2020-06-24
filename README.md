@@ -22,7 +22,7 @@ For further information and a description of optional arguments, see `help(clust
 
 ## Develop
 
-Run `python3 -m unittest` from the top-level directory to run all unit tests.
+Run `tox` (or `pytest`) from the top-level directory to run all unit tests.
 
 # License
 MIT
