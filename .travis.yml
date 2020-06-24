@@ -1,10 +1,14 @@
 language: python
 python:
 - '3.6'
-sudo: false
+
+install: sudo ./.ci/install_dependencies.sh $HOME/tools
+
+before_script:
+- export PATH=$HOME/tools:$HOME/tools/vcflib/bin:$PATH
 
 script:
-- python setup.py test
+- pytest
 
 deploy:
   provider: pypi

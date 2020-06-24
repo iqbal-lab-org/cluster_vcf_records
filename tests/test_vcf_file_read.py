@@ -5,8 +5,8 @@ import pyfastaq
 
 from cluster_vcf_records import vcf_file_read, vcf_record
 
-modules_dir = os.path.dirname(os.path.abspath(vcf_file_read.__file__))
-data_dir = os.path.join(modules_dir, "tests", "data", "vcf_file_read")
+this_dir = os.path.dirname(os.path.abspath(__file__))
+data_dir = os.path.join(this_dir, "data", "vcf_file_read")
 
 
 class TestVcfFileRead(unittest.TestCase):
