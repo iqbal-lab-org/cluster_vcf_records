@@ -7,6 +7,7 @@ except:
 
 
 __all__ = [
+    "utils",
     "vcf_clusterer",
     "vcf_file_read",
     "vcf_merge",
