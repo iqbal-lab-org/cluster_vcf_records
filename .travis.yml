@@ -8,7 +8,7 @@ before_script:
 - export PATH=$HOME/tools:$HOME/tools/vcflib/bin:$PATH
 
 script:
-- pytest
+- tox
 
 deploy:
   provider: pypi
