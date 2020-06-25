@@ -1,0 +1,15 @@
+[
+  [
+    "block.0.tsv.gz",
+    "block.1.tsv.gz"
+  ],
+  [
+    [
+      "sample_1",
+      "sample_2"
+    ],
+    [
+      "sample_3"
+    ]
+  ]
+]
