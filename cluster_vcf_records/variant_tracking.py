@@ -12,11 +12,16 @@ from bitarray import bitarray
 import pyfastaq
 import pysam
 
-from cluster_vcf_records import utils, vcf_file_read, vcf_record
+from cluster_vcf_records import allele_combinations, utils, vcf_file_read, vcf_record
 
 
 Variant = namedtuple("Variant", ["seq_id", "pos", "ref", "alt"])
 
+
+def variants_overlap(var1, var2):
+    end1 = var1.pos + len(var1.ref) - 1
+    end2 = var2.pos + len(var2.ref) - 1
+    return var1.seq_id == var2.seq_id and var1.pos <= end2 and var2.pos <= end1
 
 def _load_one_vcf_file(vcf_file, ref_seqs, ref_seq_to_id, ref_fasta, temp_dir):
     sample = vcf_file_read.get_sample_name_from_vcf_file(vcf_file)
@@ -180,6 +185,7 @@ class VariantBlock:
 def load_slice_of_block(infile, seq_id, start, end):
     """Returns dictionary of variant id -> bitarray.
     start and end should be zero-based and include end points"""
+    print("load_slice_of_block", infile, seq_id, start, end)
     variants = {}
     if not isinstance(infile, pysam.libctabix.TabixFile):
         infile = pysam.TabixFile(infile)
@@ -189,6 +195,41 @@ def load_slice_of_block(infile, seq_id, start, end):
         variants[int(var_id)] = bitarray(array)
     return variants
 
+def var_patterns_from_block_slices(block_files, seq_id, start, end):
+    print("var_patterns_from_block_slices", seq_id, start, end)
+    var_patterns = set()
+    for tabix_file in block_files:
+        try:
+            block = load_slice_of_block(tabix_file, seq_id, start, end)
+        except ValueError: # happens if region is not in tabix file
+            continue
+        if len(block) == 0:
+            continue
+        sorted_vars = sorted(list(block.keys()))
+        samples = block[sorted_vars[0]].length()
+
+        for i in range(samples):
+            var_pattern = tuple(sorted([v for v in sorted_vars if block[v][i]]))
+            if len(var_pattern) > 0:
+                var_patterns.add(var_pattern)
+
+    return var_patterns
+
+
+def var_pattern_to_allele(variants, var_pattern, ref_seq, start, end):
+    sorted_vars = sorted([variants[v] for v in var_pattern], key=attrgetter("seq_id", "pos"))
+    allele = list(ref_seq[start:end+1])
+    for v1, v2 in itertools.combinations(sorted_vars, 2):
+        if variants_overlap(v1, v2):
+            return None
+
+    # Do in reverse order so indels don't mess up coords
+    for var in reversed(sorted_vars):
+        assert start <= var.pos <= var.pos + len(var.ref) - 1 <= end
+        allele_pos = var.pos - start
+        allele[allele_pos:allele_pos + len(var.ref)] = var.alt
+
+    return "".join(allele)
 
 class VariantTracker:
     def __init__(self, root_dir, ref_fasta, mem_limit=2):
@@ -196,7 +237,7 @@ class VariantTracker:
         self.ref_fasta = os.path.abspath(ref_fasta)
         self.mem_lmit = mem_limit
         self.variants = Variants()
-        self.ref_seqs, self.ref_seq_to_id = VariantTracker.load_ref_seq_data(
+        self.ref_seqs, self.ref_seq_names, self.ref_seq_to_id = VariantTracker.load_ref_seq_data(
             self.ref_fasta
         )
         self.metadata_file = os.path.join(root_dir, "metadata.json")
@@ -210,12 +251,13 @@ class VariantTracker:
         pyfastaq.tasks.file_to_dict(fasta_file, seqs)
         ref_seq_names = sorted(seqs.keys())
         ref_seq_to_id = {x: i for i, x in enumerate(ref_seq_names)}
-        return seqs, ref_seq_to_id
+        return seqs, ref_seq_names, ref_seq_to_id
 
     def _load_data_from_root(self):
         with open(self.metadata_file) as f:
             self.var_block_files, self.samples = json.load(f)
         self.variants.load_from_file(self.variants_file)
+        self.var_block_tabixes = [os.path.join(self.root_dir, x) for x in self.var_block_files]
 
     def _add_var_block_file(self):
         filename = f"block.{len(self.var_block_files)}.tsv.gz"
@@ -240,7 +282,7 @@ class VariantTracker:
             over_sample_limit or over_mem_limit
         )
 
-    def construct_from_vcf_files(
+    def merge_vcf_files(
         self, infiles, temp_dir, cpus=1, mem_limit=2, force=False, sample_limit=None
     ):
         if force:
@@ -254,7 +296,7 @@ class VariantTracker:
 
         for i in range(0, len(infiles), cpus):
             with multiprocessing.Pool(cpus) as pool:
-                new_variants_lists = pool.starmap(
+                new_variants_lists = self.var_block_filesew_variants_lists = pool.starmap(
                     _load_one_vcf_file,
                     zip(
                         infiles[i : i + cpus],
@@ -300,6 +342,74 @@ class VariantTracker:
         self.variants.save_to_file(self.variants_file)
         logging.info("Finished")
 
-    def cluster(self, outdir):
-        # FIXME
-        pass
+
+    def _variant_cluster_to_vcf_line(self, variants, variant_ids, max_alleles=None):
+        ref_seq = self.ref_seqs[self.ref_seq_names[variants[0].seq_id]]
+        start, end, alts = allele_combinations.var_cluster_to_coords_and_alts(variants, ref_seq, max_alleles=max_alleles)
+        info_field = "."
+        if alts is None:
+            alts = set()
+            var_patterns = var_patterns_from_block_slices(self.var_block_tabixes, variants[0].seq_id, start, end)
+            var_id_to_var = dict(zip(variant_ids, variants))
+            for var_pattern in var_patterns:
+                alt_allele = var_pattern_to_allele(var_id_to_var, var_pattern, ref_seq, start, end)
+                if alt_allele is None:
+                    logging.warn("Conflicting allele combination:")
+                    for var_id in sorted(list(var_pattern)):
+                        var = var_id_to_var[var_id]
+                        logging.warn(f"  {ref_seq.id} {var.pos+1} {var.ref} {var.alt}")
+                else:
+                    alts.add(alt_allele)
+
+            info_field = "High_variability"
+
+        if len(alts) == 0:
+            return None
+        else:
+            return "\t".join([
+                ref_seq.id,
+                str(start + 1),
+                ".",
+                ref_seq[start:end+1],
+                ",".join(sorted(list(alts))),
+                ".",
+                ".",
+                info_field,
+            ])
+
+    def cluster(self, outprefix, max_ref_length, max_alleles=None):
+        out_main = f"{outprefix}.vcf"
+        out_exclude = f"{outprefix}.excluded.tsv"
+
+        with open(out_main, "w") as f_main, open(out_exclude, "w") as f_exclude:
+            print("##fileformat=VCFv4.2", file=f_main)
+            for seq in self.ref_seqs.values():
+                print(f"##contig=<ID={seq.id},length={len(seq)}>", file=f_main)
+            print('##FILTER=<ID=PASS,Description="All filters passed">', file=f_main)
+            if max_alleles is not None:
+                print(f'##INFO=<ID=High_variability,Number=0,Type=Flag,Description="Position is in a region of high variability, with more alleles than the limit of {max_alleles}">', file=f_main)
+            print("#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO", file=f_main)
+            print("CHROM\tPOS\tREF\tALT", file=f_exclude)
+            variants = []
+            variant_ids = []
+
+            for var, var_id in self.variants.sorted_iter():
+                if len(var.ref) > max_ref_length:
+                    print(self.ref_seq_names[var.seq_id], var.pos + 1, var.ref, var.alt, sep="\t", file=f_exclude)
+                    continue
+
+                if len(variants) == 0 or any([variants_overlap(var, x) for x in variants]):
+                    variants.append(var)
+                    variant_ids.append(var_id)
+                    continue
+
+                record = self._variant_cluster_to_vcf_line(variants, variant_ids, max_alleles=max_alleles)
+                if record is not None:
+                    print(record, file=f_main)
+                variants = [var]
+                variant_ids = [var_id]
+
+            record = self._variant_cluster_to_vcf_line(variants, variant_ids, max_alleles=max_alleles)
+            if record is not None:
+                print(record, file=f_main)
+

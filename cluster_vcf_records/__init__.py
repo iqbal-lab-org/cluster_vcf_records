@@ -7,6 +7,7 @@ except:
 
 
 __all__ = [
+    "allele_combinations",
     "utils",
     "vcf_clusterer",
     "vcf_file_read",
