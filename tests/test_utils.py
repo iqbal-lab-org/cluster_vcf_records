@@ -8,6 +8,16 @@ this_dir = os.path.dirname(os.path.abspath(__file__))
 data_dir = os.path.join(this_dir, "data", "utils")
 
 
+def test_simplify_vcf():
+    infile = os.path.join(data_dir, "simplify_vcf.in.vcf")
+    tmp_out = "tmp.simplify_vcf.out.vcf"
+    utils.rm_rf(tmp_out)
+    utils.simplify_vcf(infile, tmp_out)
+    expect = os.path.join(data_dir, "simplify_vcf.expect.vcf")
+    assert filecmp.cmp(tmp_out, expect, shallow=False)
+    os.unlink(tmp_out)
+
+
 def test_normalise_vcf():
     infile = os.path.join(data_dir, "normalise_vcf.in.vcf")
     ref_fa = os.path.join(data_dir, "normalise_vcf.in.fa")

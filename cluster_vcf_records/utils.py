@@ -1,7 +1,10 @@
 import logging
 import os
+import re
 import subprocess
 import sys
+
+from cluster_vcf_records import vcf_record
 
 
 def syscall(command):
@@ -25,6 +28,41 @@ def syscall(command):
         raise Exception("Error in system call. Cannot continue")
 
     return completed_process
+
+
+def simplify_vcf(infile, outfile):
+    """Removes records that are all null calls and ref calls.
+    If record has GT, removes all non-called alleles and replaces FORMAT
+    with just GT"""
+    with open(infile) as f_in, open(outfile, "w") as f_out:
+        for line in f_in:
+            if line.startswith("#"):
+                print(line, end="", file=f_out)
+            else:
+                record = vcf_record.VcfRecord(line)
+                print("record:", record)
+                if "GT" in record.FORMAT:
+                    gt_indexes = set(re.split("[/|]", record.FORMAT["GT"]))
+                    print("gt_indexes:", gt_indexes)
+                    if "." in gt_indexes:
+                        continue
+                    gt_indexes = {int(x) for x in gt_indexes}
+                    print("gt_indexes:", gt_indexes)
+                    if gt_indexes == {0}:
+                        continue
+
+                    gt_indexes = sorted(list(gt_indexes))
+                    record.ALT = [record.ALT[i - 1] for i in gt_indexes if i > 0]
+                    record.FORMAT.clear()
+                    if len(gt_indexes) == 1:
+                        record.set_format_key_value("GT", "1/1")
+                    else:
+                        assert len(gt_indexes) == 2
+                        if 0 in gt_indexes:
+                            record.set_format_key_value("GT", "0/1")
+                        else:
+                            record.set_format_key_value("GT", "1/2")
+                print(record, file=f_out)
 
 
 def normalise_vcf(vcf_in, ref_fasta, vcf_out):
