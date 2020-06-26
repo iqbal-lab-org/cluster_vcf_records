@@ -40,14 +40,11 @@ def simplify_vcf(infile, outfile):
                 print(line, end="", file=f_out)
             else:
                 record = vcf_record.VcfRecord(line)
-                print("record:", record)
                 if "GT" in record.FORMAT:
                     gt_indexes = set(re.split("[/|]", record.FORMAT["GT"]))
-                    print("gt_indexes:", gt_indexes)
                     if "." in gt_indexes:
                         continue
                     gt_indexes = {int(x) for x in gt_indexes}
-                    print("gt_indexes:", gt_indexes)
                     if gt_indexes == {0}:
                         continue
 
