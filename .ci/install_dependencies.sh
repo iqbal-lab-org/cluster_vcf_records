@@ -17,6 +17,7 @@ apt-get install -y \
   libssl-dev \
   python3-pip \
   python3-setuptools \
+  tabix \
   zlib1g-dev
 
 
