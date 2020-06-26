@@ -16,6 +16,7 @@ apt-get install -y \
   liblzma-dev \
   libssl-dev \
   python3-pip \
+  python3-setuptools \
   zlib1g-dev
 
 
