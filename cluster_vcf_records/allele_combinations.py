@@ -4,6 +4,7 @@ from operator import attrgetter
 
 from cluster_vcf_records import variant_tracking
 
+
 def var_cluster_to_coords_and_snps_and_non_snps(variants):
     assert len(variants) > 0
     nucleotides = {"A", "C", "G", "T"}
@@ -26,7 +27,9 @@ def var_cluster_to_coords_and_snps_and_non_snps(variants):
             i = 0
             while i < len(ref) - 1 and i < len(alt) and ref[i] == alt[i]:
                 i += 1
-            non_snps.append(variant_tracking.Variant(var.seq_id, var.pos + i, ref[i:], alt[i:]))
+            non_snps.append(
+                variant_tracking.Variant(var.seq_id, var.pos + i, ref[i:], alt[i:])
+            )
 
     return start, end, snps, non_snps
 
@@ -41,12 +44,18 @@ def any_vars_overlap(variants):
 
     return False
 
+
 def var_cluster_to_coords_and_alts(variants, ref_seq, max_alleles=None):
     if len(variants) == 1:
         end = variants[0].pos + len(variants[0].ref) - 1
         return variants[0].pos, end, {variants[0].alt}
 
-    final_start, final_end, snps, non_snps = var_cluster_to_coords_and_snps_and_non_snps(variants)
+    (
+        final_start,
+        final_end,
+        snps,
+        non_snps,
+    ) = var_cluster_to_coords_and_snps_and_non_snps(variants)
 
     # generate all the allele combinations from the SNPs.
     snp_positions = []
@@ -86,11 +95,11 @@ def var_cluster_to_coords_and_alts(variants, ref_seq, max_alleles=None):
                 if any_vars_overlap(non_snp_combo):
                     continue
 
-                non_snp_combo  = sorted(list(non_snp_combo), key=attrgetter("pos"))
+                non_snp_combo = sorted(list(non_snp_combo), key=attrgetter("pos"))
                 new_alt = copy.copy(alt_seq)
                 for non_snp in reversed(non_snp_combo):
                     start_pos = non_snp.pos - final_start
-                    new_alt[start_pos:start_pos + len(non_snp.ref)] = non_snp.alt
+                    new_alt[start_pos : start_pos + len(non_snp.ref)] = non_snp.alt
                     alts.add("".join(new_alt))
 
     alts.discard(ref_seq_for_vcf)

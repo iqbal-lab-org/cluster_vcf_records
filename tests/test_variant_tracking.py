@@ -31,6 +31,7 @@ def test_variants_overlap():
     assert not f(v2, v5)
     assert not f(v5, v2)
 
+
 def test_Variants():
     variants = variant_tracking.Variants()
     assert len(variants) == 0
@@ -137,20 +138,34 @@ def test_VariantBlock():
     utils.rm_rf(tmp_file2)
     utils.rm_rf(tmp_file2 + ".tbi")
     block.write_to_bgzip_file_and_tab_index(tmp_file2, variants)
-    got_patterns = variant_tracking.var_patterns_from_block_slices([tmp_file, tmp_file2], 1, 0, 41)
+    got_patterns = variant_tracking.var_patterns_from_block_slices(
+        [tmp_file, tmp_file2], 1, 0, 41
+    )
     assert got_patterns == set()
-    got_patterns = variant_tracking.var_patterns_from_block_slices([tmp_file, tmp_file2], 1, 0, 42)
+    got_patterns = variant_tracking.var_patterns_from_block_slices(
+        [tmp_file, tmp_file2], 1, 0, 42
+    )
     assert got_patterns == {(3,)}
-    got_patterns = variant_tracking.var_patterns_from_block_slices([tmp_file, tmp_file2], 1, 42, 42)
+    got_patterns = variant_tracking.var_patterns_from_block_slices(
+        [tmp_file, tmp_file2], 1, 42, 42
+    )
     assert got_patterns == {(3,)}
-    got_patterns = variant_tracking.var_patterns_from_block_slices([tmp_file, tmp_file2], 1, 42, 43)
+    got_patterns = variant_tracking.var_patterns_from_block_slices(
+        [tmp_file, tmp_file2], 1, 42, 43
+    )
     assert got_patterns == {(3,)}
-    got_patterns = variant_tracking.var_patterns_from_block_slices([tmp_file, tmp_file2], 1, 43, 43)
+    got_patterns = variant_tracking.var_patterns_from_block_slices(
+        [tmp_file, tmp_file2], 1, 43, 43
+    )
     assert got_patterns == set()
-    got_patterns = variant_tracking.var_patterns_from_block_slices([tmp_file, tmp_file2], 0, 0, 9)
+    got_patterns = variant_tracking.var_patterns_from_block_slices(
+        [tmp_file, tmp_file2], 0, 0, 9
+    )
     expect_patterns = {(0, 1), (2,), (0,), (1, 4)}
     assert got_patterns == expect_patterns
-    got_patterns = variant_tracking.var_patterns_from_block_slices([tmp_file, tmp_file2], 0, 0, 10)
+    got_patterns = variant_tracking.var_patterns_from_block_slices(
+        [tmp_file, tmp_file2], 0, 0, 10
+    )
     expect_patterns = {(0, 1, 5), (2,), (0,), (1, 4)}
     assert got_patterns == expect_patterns
 
@@ -178,7 +193,7 @@ def test_var_pattern_to_allele():
     assert f(variants, {0}, ref_seq, 2, 4) == "ATC"
     assert f(variants, {0}, ref_seq, 3, 3) == "T"
     assert f(variants, {0}, ref_seq, 3, 4) == "TC"
-    assert f(variants, {0, 1}, ref_seq, 3, 4) is None # 0 and 1 conflict
+    assert f(variants, {0, 1}, ref_seq, 3, 4) is None  # 0 and 1 conflict
     assert f(variants, {0, 2}, ref_seq, 3, 4) == "TA"
     assert f(variants, {0, 2, 3}, ref_seq, 3, 7) == "TATG"
     assert f(variants, {0, 2, 3}, ref_seq, 3, 8) == "TATGC"
@@ -194,9 +209,11 @@ def test_var_pattern_to_allele():
 def test_load_one_vcf_file():
     vcf_file = os.path.join(data_dir, "load_one_vcf_file.vcf")
     ref_fasta = os.path.join(data_dir, "load_one_vcf_file.fa")
-    ref_seqs, ref_names, ref_seq_to_id = variant_tracking.VariantTracker.load_ref_seq_data(
-        ref_fasta
-    )
+    (
+        ref_seqs,
+        ref_names,
+        ref_seq_to_id,
+    ) = variant_tracking.VariantTracker.load_ref_seq_data(ref_fasta)
     tmp_dir = "tmp.load_one_vcf_file"
     utils.rm_rf(tmp_dir)
     os.mkdir(tmp_dir)
@@ -286,4 +303,3 @@ def test_VariantTracker_make_from_vcf_then_save_then_load_then_cluster():
 
     utils.rm_rf(tmp_dir)
     utils.rm_rf(root_dir)
-

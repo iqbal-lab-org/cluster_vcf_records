@@ -3,6 +3,7 @@ import os
 import subprocess
 import sys
 
+
 def syscall(command):
     logging.debug("Run command: {command}")
     completed_process = subprocess.run(

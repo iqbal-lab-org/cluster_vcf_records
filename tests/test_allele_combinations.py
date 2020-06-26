@@ -4,6 +4,7 @@ import pyfastaq
 
 from cluster_vcf_records import allele_combinations, variant_tracking
 
+
 def test_var_cluster_to_coords_and_snps_and_non_snps():
     variants = [variant_tracking.Variant(0, 10, "A", "G")]
     f = allele_combinations.var_cluster_to_coords_and_snps_and_non_snps
@@ -12,12 +13,12 @@ def test_var_cluster_to_coords_and_snps_and_non_snps():
 
     indel = variant_tracking.Variant(0, 10, "AT", "A")
     alt_indel = variant_tracking.Variant(0, 11, "T", "")
-    variants.extend([
-        variant_tracking.Variant(0, 10, "A", "T"),
-        indel,
-    ])
+    variants.extend(
+        [variant_tracking.Variant(0, 10, "A", "T"), indel,]
+    )
     snps[10].add("T")
     assert f(variants) == (10, 11, snps, [alt_indel])
+
 
 def test_any_vars_overlap():
     variants = [variant_tracking.Variant(0, 4, "T", "G")]
@@ -25,7 +26,7 @@ def test_any_vars_overlap():
     variants.append(variant_tracking.Variant(0, 5, "TA", "G"))
     assert not allele_combinations.any_vars_overlap(variants)
     variants.append(variant_tracking.Variant(0, 6, "A", "G"))
-    assert  allele_combinations.any_vars_overlap(variants)
+    assert allele_combinations.any_vars_overlap(variants)
 
 
 def test_var_cluster_to_coords_and_alts():

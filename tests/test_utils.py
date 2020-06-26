@@ -8,7 +8,6 @@ this_dir = os.path.dirname(os.path.abspath(__file__))
 data_dir = os.path.join(this_dir, "data", "utils")
 
 
-
 def test_normalise_vcf():
     infile = os.path.join(data_dir, "normalise_vcf.in.vcf")
     ref_fa = os.path.join(data_dir, "normalise_vcf.in.fa")
@@ -22,4 +21,3 @@ def test_normalise_vcf():
     # We don't care about those, so just check the actual records.
     assert got_vcf_records == expected_vcf_records
     os.unlink(tmp_out)
-
