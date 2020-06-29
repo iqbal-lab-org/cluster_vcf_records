@@ -72,13 +72,26 @@ def var_cluster_to_coords_and_alts(variants, ref_seq, max_alleles=None):
     total_alleles_lower_bound = 1
     for x in snp_nucleotides:
         total_alleles_lower_bound *= len(x)
-    total_alleles_lower_bound += len(non_snps)
+    if len(non_snps):
+        total_alleles_lower_bound *= len(non_snps)
 
     if total_alleles_lower_bound > max_alleles:
         return final_start, final_end, None
 
     alts = set()
     ref_seq_for_vcf = ref_seq[final_start : final_end + 1]
+
+    # This generates all possible combinations of indels. Checks if
+    # each combination contains any that overlap, in which case that combination
+    # is not used because can't apply two conflicting indels.
+    overlaps = {}
+    for v1, v2 in itertools.combinations(non_snps, 2):
+        if variant_tracking.variants_overlap(v1, v2):
+            key1, key2 = sorted([v1, v2])
+            if key1 not in overlaps:
+                overlaps[key1] = set()
+            overlaps[key1].add(key2)
+            #overlaps.add(tuple(sorted([v1, v2])))
 
     # snp_nucleotides has the ref and all the alt snps.
     # This loops over all combinations of them, so we're getting every
@@ -91,14 +104,33 @@ def var_cluster_to_coords_and_alts(variants, ref_seq, max_alleles=None):
         if len(alts) > max_alleles:
             return final_start, final_end, None
 
-        # This generates all possible combinations of indels. Checks if
-        # each combination contains any that overlap, in which case that combination
-        # is not used because can't apply two conflicting indels.
+        number_of_combos_used = 1
         for number_of_non_snps in range(1, len(non_snps) + 1):
+            # If the previous combination of number_of_non_snps of non_snps
+            # resulted in none getting used because of overlapping non_snps,
+            # then taking more than number_of_non_snps won't work either so stop
+            if number_of_combos_used == 0:
+                break
+            else:
+                number_of_combos_used = 0
+
             for non_snp_combo in itertools.combinations(non_snps, number_of_non_snps):
-                if any_vars_overlap(non_snp_combo):
+                overlap = False
+                if number_of_non_snps > 1:
+                    for v1 in non_snps:
+                        if v1 in overlaps:
+                            for v2 in non_snps:
+                                if v2 in overlaps[v1]:
+                                    overlap = True
+                                    break
+
+                        if overlap:
+                            break
+
+                if overlap:
                     continue
 
+                number_of_combos_used += 1
                 non_snp_combo = sorted(list(non_snp_combo), key=attrgetter("pos"))
                 new_alt = copy.copy(alt_seq)
                 for non_snp in reversed(non_snp_combo):

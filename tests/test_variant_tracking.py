@@ -190,7 +190,7 @@ def test_VariantBlock():
     os.unlink(tmp_file2 + ".tbi")
 
 
-def test_var_pattern_to_allele():
+def test_var_pattern_to_alleles():
     ref_seq = pyfastaq.sequences.Fasta("ref", "GTAGCTGACTGCTAGTGTA")
     #                                          0123456789012345678
     variants = {
@@ -203,22 +203,22 @@ def test_var_pattern_to_allele():
         6: variant_tracking.Variant(0, 10, "G", "C"),
         7: variant_tracking.Variant(0, 10, "GC", "G"),
     }
-    f = variant_tracking.var_pattern_to_allele
-    assert f(variants, {0}, ref_seq, 2, 3) == "AT"
-    assert f(variants, {0}, ref_seq, 2, 4) == "ATC"
-    assert f(variants, {0}, ref_seq, 3, 3) == "T"
-    assert f(variants, {0}, ref_seq, 3, 4) == "TC"
-    assert f(variants, {0, 1}, ref_seq, 3, 4) is None  # 0 and 1 conflict
-    assert f(variants, {0, 2}, ref_seq, 3, 4) == "TA"
-    assert f(variants, {0, 2, 3}, ref_seq, 3, 7) == "TATG"
-    assert f(variants, {0, 2, 3}, ref_seq, 3, 8) == "TATGC"
-    assert f(variants, {0, 2, 3}, ref_seq, 3, 9) == "TATGCT"
-    assert f(variants, {0, 2, 3, 4}, ref_seq, 3, 9) == "TATGCAAAT"
-    assert f(variants, {0, 2, 3, 4, 5}, ref_seq, 3, 9) == "TATGCAAACG"
-    assert f(variants, {0, 2, 3, 4, 5}, ref_seq, 3, 10) == "TATGCAAACGG"
-    assert f(variants, {0, 2, 3, 4, 5, 6}, ref_seq, 3, 10) == "TATGCAAACGC"
-    assert f(variants, {0, 2, 3, 4, 5, 6}, ref_seq, 3, 11) == "TATGCAAACGCC"
-    assert f(variants, {0, 2, 3, 4, 5, 7}, ref_seq, 3, 11) == "TATGCAAACGG"
+    f = variant_tracking.var_pattern_to_alleles
+    assert f(variants, {0}, ref_seq, 2, 3) == {"AT"}
+    assert f(variants, {0}, ref_seq, 2, 4) == {"ATC"}
+    assert f(variants, {0}, ref_seq, 3, 3) == {"T"}
+    assert f(variants, {0}, ref_seq, 3, 4) == {"TC"}
+    assert f(variants, {0, 1}, ref_seq, 3, 4) == {"TC", "AC"}
+    assert f(variants, {0, 2}, ref_seq, 3, 4) == {"TA"}
+    assert f(variants, {0, 2, 3}, ref_seq, 3, 7) == {"TATG"}
+    assert f(variants, {0, 2, 3}, ref_seq, 3, 8) == {"TATGC"}
+    assert f(variants, {0, 2, 3}, ref_seq, 3, 9) == {"TATGCT"}
+    assert f(variants, {0, 2, 3, 4}, ref_seq, 3, 9) == {"TATGCAAAT"}
+    assert f(variants, {0, 2, 3, 4, 5}, ref_seq, 3, 9) == {"TATGCAAACG"}
+    assert f(variants, {0, 2, 3, 4, 5}, ref_seq, 3, 10) == {"TATGCAAACGG"}
+    assert f(variants, {0, 2, 3, 4, 5, 6}, ref_seq, 3, 10) == {"TATGCAAACGC"}
+    assert f(variants, {0, 2, 3, 4, 5, 6}, ref_seq, 3, 11) == {"TATGCAAACGCC"}
+    assert f(variants, {0, 2, 3, 4, 5, 7}, ref_seq, 3, 11) == {"TATGCAAACGG"}
 
 
 def test_load_one_vcf_file():
