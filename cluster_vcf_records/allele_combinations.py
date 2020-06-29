@@ -50,6 +50,8 @@ def var_cluster_to_coords_and_alts(variants, ref_seq, max_alleles=None):
         end = variants[0].pos + len(variants[0].ref) - 1
         return variants[0].pos, end, {variants[0].alt}
 
+    if max_alleles is None:
+        max_alleles = float("Inf")
     (
         final_start,
         final_end,
@@ -72,7 +74,7 @@ def var_cluster_to_coords_and_alts(variants, ref_seq, max_alleles=None):
         total_alleles_lower_bound *= len(x)
     total_alleles_lower_bound += len(non_snps)
 
-    if max_alleles is not None and total_alleles_lower_bound > max_alleles:
+    if total_alleles_lower_bound > max_alleles:
         return final_start, final_end, None
 
     alts = set()
@@ -86,6 +88,8 @@ def var_cluster_to_coords_and_alts(variants, ref_seq, max_alleles=None):
         for i, position in enumerate(snp_positions):
             alt_seq[position - final_start] = combination[i]
         alts.add("".join(alt_seq))
+        if len(alts) > max_alleles:
+            return final_start, final_end, None
 
         # This generates all possible combinations of indels. Checks if
         # each combination contains any that overlap, in which case that combination
@@ -101,6 +105,8 @@ def var_cluster_to_coords_and_alts(variants, ref_seq, max_alleles=None):
                     start_pos = non_snp.pos - final_start
                     new_alt[start_pos : start_pos + len(non_snp.ref)] = non_snp.alt
                     alts.add("".join(new_alt))
+                    if len(alts) > max_alleles:
+                        return final_start, final_end, None
 
     alts.discard(ref_seq_for_vcf)
     return final_start, final_end, alts
