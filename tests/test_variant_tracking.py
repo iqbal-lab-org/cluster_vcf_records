@@ -108,19 +108,33 @@ def test_VariantBlock():
     utils.rm_rf(tmp_file)
     utils.rm_rf(tmp_file + ".tbi")
     block.write_to_bgzip_file_and_tab_index(tmp_file, variants)
+    wanted_ids = set([v for k, v in variants.sorted_iter()])
 
     # Load slices from file. Note that none of the variants had variants[1], so
     # should not be in the file
-    assert variant_tracking.load_slice_of_block(tmp_file, 1, 0, 0) == {}
-    assert variant_tracking.load_slice_of_block(tmp_file, 1, 41, 41) == {}
-    assert variant_tracking.load_slice_of_block(tmp_file, 1, 43, 43) == {}
-    assert variant_tracking.load_slice_of_block(tmp_file, 0, 1, 1) == {}
+    assert variant_tracking.load_slice_of_block(tmp_file, wanted_ids, 1, 0, 0) == {}
+    assert variant_tracking.load_slice_of_block(tmp_file, wanted_ids, 1, 41, 41) == {}
+    assert variant_tracking.load_slice_of_block(tmp_file, wanted_ids, 1, 43, 43) == {}
+    assert variant_tracking.load_slice_of_block(tmp_file, wanted_ids, 0, 1, 1) == {}
     expect_vars = {0: block.bitarrays[0]}
-    assert variant_tracking.load_slice_of_block(tmp_file, 0, 0, 0) == expect_vars
-    assert variant_tracking.load_slice_of_block(tmp_file, 0, 0, 1) == expect_vars
+    assert (
+        variant_tracking.load_slice_of_block(tmp_file, wanted_ids, 0, 0, 0)
+        == expect_vars
+    )
+    assert variant_tracking.load_slice_of_block(tmp_file, {1}, 0, 0, 0) == {}
+    assert (
+        variant_tracking.load_slice_of_block(tmp_file, wanted_ids, 0, 0, 1)
+        == expect_vars
+    )
     expect_vars[2] = bitarray(block.bitarrays[2])
-    assert variant_tracking.load_slice_of_block(tmp_file, 0, 0, 2) == expect_vars
-    assert variant_tracking.load_slice_of_block(tmp_file, 0, 0, 3) == expect_vars
+    assert (
+        variant_tracking.load_slice_of_block(tmp_file, wanted_ids, 0, 0, 2)
+        == expect_vars
+    )
+    assert (
+        variant_tracking.load_slice_of_block(tmp_file, wanted_ids, 0, 0, 3)
+        == expect_vars
+    )
 
     # Load variant patterns from slices of block. Make another block file to test
     # getting from >1 file
@@ -138,33 +152,34 @@ def test_VariantBlock():
     utils.rm_rf(tmp_file2)
     utils.rm_rf(tmp_file2 + ".tbi")
     block.write_to_bgzip_file_and_tab_index(tmp_file2, variants)
+    wanted_ids = set([v for k, v in variants.sorted_iter()])
     got_patterns = variant_tracking.var_patterns_from_block_slices(
-        [tmp_file, tmp_file2], 1, 0, 41
+        [tmp_file, tmp_file2], wanted_ids, 1, 0, 41
     )
     assert got_patterns == set()
     got_patterns = variant_tracking.var_patterns_from_block_slices(
-        [tmp_file, tmp_file2], 1, 0, 42
+        [tmp_file, tmp_file2], wanted_ids, 1, 0, 42
     )
     assert got_patterns == {(3,)}
     got_patterns = variant_tracking.var_patterns_from_block_slices(
-        [tmp_file, tmp_file2], 1, 42, 42
+        [tmp_file, tmp_file2], wanted_ids, 1, 42, 42
     )
     assert got_patterns == {(3,)}
     got_patterns = variant_tracking.var_patterns_from_block_slices(
-        [tmp_file, tmp_file2], 1, 42, 43
+        [tmp_file, tmp_file2], wanted_ids, 1, 42, 43
     )
     assert got_patterns == {(3,)}
     got_patterns = variant_tracking.var_patterns_from_block_slices(
-        [tmp_file, tmp_file2], 1, 43, 43
+        [tmp_file, tmp_file2], wanted_ids, 1, 43, 43
     )
     assert got_patterns == set()
     got_patterns = variant_tracking.var_patterns_from_block_slices(
-        [tmp_file, tmp_file2], 0, 0, 9
+        [tmp_file, tmp_file2], wanted_ids, 0, 0, 9
     )
     expect_patterns = {(0, 1), (2,), (0,), (1, 4)}
     assert got_patterns == expect_patterns
     got_patterns = variant_tracking.var_patterns_from_block_slices(
-        [tmp_file, tmp_file2], 0, 0, 10
+        [tmp_file, tmp_file2], wanted_ids, 0, 0, 10
     )
     expect_patterns = {(0, 1, 5), (2,), (0,), (1, 4)}
     assert got_patterns == expect_patterns

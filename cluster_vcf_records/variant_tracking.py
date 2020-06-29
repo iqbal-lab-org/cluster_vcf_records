@@ -185,26 +185,31 @@ class VariantBlock:
         )
 
 
-def load_slice_of_block(infile, seq_id, start, end):
+def load_slice_of_block(infile, wanted_variants, seq_id, start, end):
     """Returns dictionary of variant id -> bitarray.
-    start and end should be zero-based and include end points"""
-    print("load_slice_of_block", infile, seq_id, start, end)
+    start and end should be zero-based and include end points.
+    wanted_variants should contain the variant ids of the variants to return.
+    Any variant found in the block that is not in wanted_variants is ignored."""
     variants = {}
     if not isinstance(infile, pysam.libctabix.TabixFile):
         infile = pysam.TabixFile(infile)
 
     for line in infile.fetch(str(seq_id), start, end + 1):
         _, _, var_id, array = line.rstrip().split()
-        variants[int(var_id)] = bitarray(array)
+        var_id = int(var_id)
+        if var_id in wanted_variants:
+            variants[int(var_id)] = bitarray(array)
     return variants
 
 
-def var_patterns_from_block_slices(block_files, seq_id, start, end):
-    print("var_patterns_from_block_slices", seq_id, start, end)
+def var_patterns_from_block_slices(block_files, wanted_variants, seq_id, start, end):
+    """Returns a set of tuples. Each tuple is a combination of variants that is
+    seen in one or more samples. Onlt the variants with ids in wanted_variants
+    are used. All other variants are ignored"""
     var_patterns = set()
     for tabix_file in block_files:
         try:
-            block = load_slice_of_block(tabix_file, seq_id, start, end)
+            block = load_slice_of_block(tabix_file, wanted_variants, seq_id, start, end)
         except ValueError:  # happens if region is not in tabix file
             continue
         if len(block) == 0:
@@ -363,10 +368,10 @@ class VariantTracker:
         info_field = "."
         if alts is None:
             alts = set()
-            var_patterns = var_patterns_from_block_slices(
-                self.var_block_tabixes, variants[0].seq_id, start, end
-            )
             var_id_to_var = dict(zip(variant_ids, variants))
+            var_patterns = var_patterns_from_block_slices(
+                self.var_block_tabixes, var_id_to_var, variants[0].seq_id, start, end
+            )
             for var_pattern in var_patterns:
                 alt_allele = var_pattern_to_allele(
                     var_id_to_var, var_pattern, ref_seq, start, end
