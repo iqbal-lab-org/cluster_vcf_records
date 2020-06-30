@@ -442,7 +442,7 @@ class VariantTracker:
                     ref_seq[start : end + 1],
                     ",".join(sorted(list(alts))),
                     ".",
-                    ".",
+                    "PASS",
                     info_field,
                 ]
             )
