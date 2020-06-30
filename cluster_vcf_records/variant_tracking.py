@@ -160,7 +160,7 @@ class VariantBlock:
     def write_to_bgzip_file_and_tab_index(self, outfile, variants):
         """Writes a bgzipped and tabix indexed file. The pos column is
         1-based and does not include end points"""
-        logging.info("Saving batch of data to disk {outfile}")
+        logging.info(f"Saving batch of data to disk {outfile}")
         with os.popen("bgzip -c > " + outfile, "w") as f:
             print("#seq_id\tpos\tvar_id\tarray", file=f)
             for var, var_id in variants.sorted_iter():
@@ -374,7 +374,7 @@ class VariantTracker:
 
         logging.info(f"Saving variants to file {self.variants_file}")
         self.variants.save_to_file(self.variants_file)
-        logging.info("Finished")
+        logging.info("Finished merging VCF files")
 
     def _variant_cluster_to_vcf_line(self, variants, variant_ids, max_alleles=None):
         ref_seq = self.ref_seqs[self.ref_seq_names[variants[0].seq_id]]

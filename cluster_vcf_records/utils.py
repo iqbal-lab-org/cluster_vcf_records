@@ -8,7 +8,7 @@ from cluster_vcf_records import vcf_record
 
 
 def syscall(command):
-    logging.debug("Run command: {command}")
+    logging.debug(f"Run command: {command}")
     completed_process = subprocess.run(
         command,
         shell=True,
