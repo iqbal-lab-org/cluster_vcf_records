@@ -261,7 +261,7 @@ def test_VariantTracker_make_from_vcf_then_save_then_load_then_cluster():
     os.mkdir(tmp_dir)
     root_dir = "tmp.construct_from_vcf_files"
     tracker = variant_tracking.VariantTracker(root_dir, ref_fasta)
-    tracker.merge_vcf_files(vcf_files, tmp_dir, cpus=2, sample_limit=2)
+    tracker.merge_vcf_files(vcf_files, temp_dir=tmp_dir, cpus=2, sample_limit=2)
 
     # Check variables ok and files made ok
     expect_samples = [["sample_1", "sample_2"], ["sample_3"]]

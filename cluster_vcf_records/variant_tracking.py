@@ -315,11 +315,24 @@ class VariantTracker:
         )
 
     def merge_vcf_files(
-        self, infiles, temp_dir, cpus=1, mem_limit=2, force=False, sample_limit=None
+        self,
+        infiles,
+        temp_dir=None,
+        cpus=1,
+        mem_limit=2,
+        force=False,
+        sample_limit=None,
     ):
         if force:
             utils.rm_rf(self.root_dir)
         os.mkdir(self.root_dir)
+        if temp_dir is None:
+            temp_dir = os.path.join(self.root_dir, "tmp")
+            made_temp_dir = True
+        else:
+            made_temp_dir = False
+        if not os.path.exists(temp_dir):
+            os.mkdir(temp_dir)
         self.var_block_files = []
         self.samples = []
         self._add_var_block_file()
@@ -365,6 +378,9 @@ class VariantTracker:
 
             if i % 100 == 0:
                 logging.info(f"Loaded {i+cpus} files out of {len(infiles)}")
+
+        if made_temp_dir:
+            utils.rm_rf(temp_dir)
 
         logging.info(f"Loaded all {len(infiles)} VCF files")
         self._write_last_var_block_file(var_block)
