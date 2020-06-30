@@ -91,7 +91,6 @@ def var_cluster_to_coords_and_alts(variants, ref_seq, max_alleles=None):
             if key1 not in overlaps:
                 overlaps[key1] = set()
             overlaps[key1].add(key2)
-            #overlaps.add(tuple(sorted([v1, v2])))
 
     # snp_nucleotides has the ref and all the alt snps.
     # This loops over all combinations of them, so we're getting every
