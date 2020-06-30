@@ -30,8 +30,8 @@ def syscall(command):
     return completed_process
 
 
-def simplify_vcf(infile, outfile):
-    """Removes records that are all null calls and ref calls.
+def simplify_vcf(infile, outfile, keep_ref_calls=False, max_ref_call_alleles=10):
+    """Removes records that are all null calls and (optionally) ref calls.
     If record has GT, removes all non-called alleles and replaces FORMAT
     with just GT"""
     with open(infile) as f_in, open(outfile, "w") as f_out:
@@ -45,20 +45,23 @@ def simplify_vcf(infile, outfile):
                     if "." in gt_indexes:
                         continue
                     gt_indexes = {int(x) for x in gt_indexes}
-                    if gt_indexes == {0}:
-                        continue
-
-                    gt_indexes = sorted(list(gt_indexes))
-                    record.ALT = [record.ALT[i - 1] for i in gt_indexes if i > 0]
                     record.FORMAT.clear()
-                    if len(gt_indexes) == 1:
-                        record.set_format_key_value("GT", "1/1")
-                    else:
-                        assert len(gt_indexes) == 2
-                        if 0 in gt_indexes:
-                            record.set_format_key_value("GT", "0/1")
+                    if gt_indexes == {0}:
+                        if keep_ref_calls and len(record.ALT) <= max_ref_call_alleles:
+                            record.set_format_key_value("GT", "0/0")
                         else:
-                            record.set_format_key_value("GT", "1/2")
+                            continue
+                    else:
+                        gt_indexes = sorted(list(gt_indexes))
+                        record.ALT = [record.ALT[i - 1] for i in gt_indexes if i > 0]
+                        if len(gt_indexes) == 1:
+                            record.set_format_key_value("GT", "1/1")
+                        else:
+                            assert len(gt_indexes) == 2
+                            if 0 in gt_indexes:
+                                record.set_format_key_value("GT", "0/1")
+                            else:
+                                record.set_format_key_value("GT", "1/2")
                 print(record, file=f_out)
 
 

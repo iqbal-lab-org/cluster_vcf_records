@@ -15,6 +15,9 @@ def test_simplify_vcf():
     utils.simplify_vcf(infile, tmp_out)
     expect = os.path.join(data_dir, "simplify_vcf.expect.vcf")
     assert filecmp.cmp(tmp_out, expect, shallow=False)
+    utils.simplify_vcf(infile, tmp_out, keep_ref_calls=True)
+    expect = os.path.join(data_dir, "simplify_vcf.expect_keep_ref_calls.vcf")
+    assert filecmp.cmp(tmp_out, expect, shallow=False)
     os.unlink(tmp_out)
 
 
