@@ -1,0 +1,21 @@
+BootStrap: debootstrap
+OSVersion: bionic
+MirrorURL: http://us.archive.ubuntu.com/ubuntu/
+
+%environment
+export PATH=/bioinf-tools/:/bioinf-tools/vcflib/bin:$PATH
+
+
+%setup
+    mkdir $SINGULARITY_ROOTFS/cluster_vcf_records
+    rsync -a .ci/install_dependencies.sh MANIFEST.in cluster_vcf_records requirements.txt setup.py tests tox.ini $SINGULARITY_ROOTFS/cluster_vcf_records
+
+
+%post
+    #_____________________ setup $PATH _______________________#
+    export PATH=/bioinf-tools/:/bioinf-tools/vcflib/bin:$PATH
+
+    /cluster_vcf_records/install_dependencies.sh /bioinf-tools
+    cd /cluster_vcf_records
+    tox
+    pip3 install .

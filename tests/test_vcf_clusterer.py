@@ -4,8 +4,8 @@ import unittest
 
 from cluster_vcf_records import vcf_clusterer, vcf_record, vcf_record_cluster
 
-modules_dir = os.path.dirname(os.path.abspath(vcf_clusterer.__file__))
-data_dir = os.path.join(modules_dir, "tests", "data", "vcf_clusterer")
+this_dir = os.path.dirname(os.path.abspath(__file__))
+data_dir = os.path.join(this_dir, "data", "vcf_clusterer")
 
 
 class TestVcfClusterer(unittest.TestCase):
