@@ -225,16 +225,27 @@ def var_patterns_from_block_slices(block_files, wanted_variants, seq_id, start, 
     return var_patterns
 
 
-def var_pattern_to_alleles(variants, var_pattern, ref_seq, start, end, max_alleles=None):
+def var_pattern_to_alleles(
+    variants, var_pattern, ref_seq, start, end, max_alleles=None
+):
     sorted_vars = sorted(
         [variants[v] for v in var_pattern], key=attrgetter("seq_id", "pos")
     )
     allele = list(ref_seq[start : end + 1])
     for v1, v2 in itertools.combinations(sorted_vars, 2):
         if variants_overlap(v1, v2):
-            this_start, this_end, alts = allele_combinations.var_cluster_to_coords_and_alts(sorted_vars, ref_seq, max_alleles=max_alleles)
+            (
+                this_start,
+                this_end,
+                alts,
+            ) = allele_combinations.var_cluster_to_coords_and_alts(
+                sorted_vars, ref_seq, max_alleles=max_alleles
+            )
             if alts is not None and start <= this_start <= this_end <= end:
-                alts = {ref_seq[start:this_start] + x + ref_seq[this_end + 1:end + 1] for x in alts}
+                alts = {
+                    ref_seq[start:this_start] + x + ref_seq[this_end + 1 : end + 1]
+                    for x in alts
+                }
                 return alts
             else:
                 return None
@@ -383,13 +394,20 @@ class VariantTracker:
             )
             for var_pattern in var_patterns:
                 alt_alleles = var_pattern_to_alleles(
-                    var_id_to_var, var_pattern, ref_seq, start, end, max_alleles=max_alleles
+                    var_id_to_var,
+                    var_pattern,
+                    ref_seq,
+                    start,
+                    end,
+                    max_alleles=max_alleles,
                 )
                 if alt_alleles is None:
                     logging.warning("Conflicting allele combination:")
                     for var_id in sorted(list(var_pattern)):
                         var = var_id_to_var[var_id]
-                        logging.warning(f"  {ref_seq.id} {var.pos+1} {var.ref} {var.alt}")
+                        logging.warning(
+                            f"  {ref_seq.id} {var.pos+1} {var.ref} {var.alt}"
+                        )
                 else:
                     alts.update(alt_alleles)
 
@@ -436,7 +454,9 @@ class VariantTracker:
                 var_count += 1
                 if var_count >= report_count:
                     pc_complete = round(100 * var_count / len(self.variants))
-                    logging.info(f"Completed {pc_complete}% ({var_count}/{len(self.variants)}) of variants")
+                    logging.info(
+                        f"Completed {pc_complete}% ({var_count}/{len(self.variants)}) of variants"
+                    )
                     report_count += int(len(self.variants) / 20)
 
                 if len(var.ref) > max_ref_length:
