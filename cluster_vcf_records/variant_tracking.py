@@ -326,13 +326,15 @@ class VariantTracker:
         if force:
             utils.rm_rf(self.root_dir)
         os.mkdir(self.root_dir)
+
         if temp_dir is None:
             temp_dir = os.path.join(self.root_dir, "tmp")
-            made_temp_dir = True
-        else:
+        if os.path.exists(temp_dir):
             made_temp_dir = False
-        if not os.path.exists(temp_dir):
+        else:
             os.mkdir(temp_dir)
+            made_temp_dir = True
+
         self.var_block_files = []
         self.samples = []
         self._add_var_block_file()
