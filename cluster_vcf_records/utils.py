@@ -4,6 +4,8 @@ import re
 import subprocess
 import sys
 
+import pyfastaq
+
 from cluster_vcf_records import vcf_record
 
 
@@ -38,7 +40,8 @@ def simplify_vcf(
     with just GT.
     If ref_Seqs is given, should be a dictionary of reference name -> sequence.
     Any calls where the REF string does not match the sequence is removed."""
-    with open(infile) as f_in, open(outfile, "w") as f_out:
+    f_in = pyfastaq.utils.open_file_read(infile)
+    with open(outfile, "w") as f_out:
         for line in f_in:
             if line.startswith("#"):
                 print(line, end="", file=f_out)
@@ -79,6 +82,8 @@ def simplify_vcf(
                             else:
                                 record.set_format_key_value("GT", "1/2")
                 print(record, file=f_out)
+
+    pyfastaq.utils.close(f_in)
 
 
 def normalise_vcf(vcf_in, ref_fasta, vcf_out):
