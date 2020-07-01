@@ -31,7 +31,7 @@ def _load_one_vcf_file(vcf_file, ref_seqs, ref_seq_to_id, ref_fasta, temp_dir):
     tmpdir = tempfile.mkdtemp(prefix="normalize_vcf.", dir=temp_dir)
     simplified_vcf = os.path.join(tmpdir, "simplified.vcf")
     normalized_vcf = os.path.join(tmpdir, "normalized.vcf")
-    utils.simplify_vcf(vcf_file, simplified_vcf)
+    utils.simplify_vcf(vcf_file, simplified_vcf, ref_seqs=ref_seqs)
     utils.normalise_vcf(simplified_vcf, ref_fasta, normalized_vcf)
     os.unlink(simplified_vcf)
     variants = []
