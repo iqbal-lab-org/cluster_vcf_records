@@ -30,16 +30,32 @@ def syscall(command):
     return completed_process
 
 
-def simplify_vcf(infile, outfile, keep_ref_calls=False, max_ref_call_alleles=10):
+def simplify_vcf(
+    infile, outfile, ref_seqs=None, keep_ref_calls=False, max_ref_call_alleles=10
+):
     """Removes records that are all null calls and (optionally) ref calls.
     If record has GT, removes all non-called alleles and replaces FORMAT
-    with just GT"""
+    with just GT.
+    If ref_Seqs is given, should be a dictionary of reference name -> sequence.
+    Any calls where the REF string does not match the sequence is removed."""
     with open(infile) as f_in, open(outfile, "w") as f_out:
         for line in f_in:
             if line.startswith("#"):
                 print(line, end="", file=f_out)
             else:
-                record = vcf_record.VcfRecord(line)
+                try:
+                    record = vcf_record.VcfRecord(line)
+                except:
+                    logging.warning(
+                        f"Bad VCF line from file {infile}. Ignoring: {line.rstrip()}"
+                    )
+                    continue
+
+                if ref_seqs is not None and not (
+                    record.ref_string_matches_dict_of_ref_sequences(ref_seqs)
+                ):
+                    continue
+
                 if "GT" in record.FORMAT:
                     gt_indexes = set(re.split("[/|]", record.FORMAT["GT"]))
                     if "." in gt_indexes:

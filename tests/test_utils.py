@@ -2,6 +2,7 @@ import filecmp
 import os
 import pytest
 
+import pyfastaq
 from cluster_vcf_records import vcf_file_read, utils
 
 this_dir = os.path.dirname(os.path.abspath(__file__))
@@ -10,12 +11,15 @@ data_dir = os.path.join(this_dir, "data", "utils")
 
 def test_simplify_vcf():
     infile = os.path.join(data_dir, "simplify_vcf.in.vcf")
+    ref_fa = os.path.join(data_dir, "simplify_vcf.ref.fa")
+    ref_seqs = {}
+    pyfastaq.tasks.file_to_dict(ref_fa, ref_seqs)
     tmp_out = "tmp.simplify_vcf.out.vcf"
     utils.rm_rf(tmp_out)
-    utils.simplify_vcf(infile, tmp_out)
+    utils.simplify_vcf(infile, tmp_out, ref_seqs=ref_seqs)
     expect = os.path.join(data_dir, "simplify_vcf.expect.vcf")
     assert filecmp.cmp(tmp_out, expect, shallow=False)
-    utils.simplify_vcf(infile, tmp_out, keep_ref_calls=True)
+    utils.simplify_vcf(infile, tmp_out, keep_ref_calls=True, ref_seqs=ref_seqs)
     expect = os.path.join(data_dir, "simplify_vcf.expect_keep_ref_calls.vcf")
     assert filecmp.cmp(tmp_out, expect, shallow=False)
     os.unlink(tmp_out)
