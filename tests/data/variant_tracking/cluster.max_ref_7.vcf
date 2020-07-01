@@ -3,7 +3,7 @@
 ##contig=<ID=ref.2,length=12>
 ##contig=<ID=ref.3,length=15>
 ##FILTER=<ID=PASS,Description="All filters passed">
-#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT
 ref.1	2	.	T	TCGC	.	PASS	.
 ref.1	3	.	C	G	.	PASS	.
 ref.1	7	.	A	T	.	PASS	.

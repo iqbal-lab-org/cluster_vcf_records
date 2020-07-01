@@ -461,7 +461,7 @@ class VariantTracker:
                     f'##INFO=<ID=High_variability,Number=0,Type=Flag,Description="Position is in a region of high variability, with more alleles than the limit of {max_alleles}">',
                     file=f_main,
                 )
-            print("#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO", file=f_main)
+            print("#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT", file=f_main)
             print("CHROM\tPOS\tREF\tALT", file=f_exclude)
             variants = []
             variant_ids = []
