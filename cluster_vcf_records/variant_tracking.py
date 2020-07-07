@@ -18,6 +18,31 @@ from cluster_vcf_records import allele_combinations, utils, vcf_file_read, vcf_r
 Variant = namedtuple("Variant", ["seq_id", "pos", "ref", "alt"])
 
 
+def print_if_not_none(x, filehandle):
+    if x is not None:
+        print(x, file=filehandle)
+
+
+def vcf_records_make_same_allele_combination(record1, record2, ref_seqs):
+    if record1.CHROM != record2.CHROM:
+        return False
+    assert record1.ref_end_pos() < record2.POS
+    alleles1 = record1.inferred_var_seqs_plus_flanks(ref_seqs[record1.CHROM], 0)[1]
+    alleles2 = record2.inferred_var_seqs_plus_flanks(ref_seqs[record2.CHROM], 0)[1]
+
+    combinations = set()
+    for a1 in alleles1:
+        for a2 in alleles2:
+            # This is not quite the allele because missing the common sequence
+            # between a1 and a2, but don't care about that. We only care if
+            # the resulting sequence from difference combinations is unique
+            allele = a1 + a2
+            if allele in combinations:
+                return True
+            combinations.add(allele)
+    return False
+
+
 def variants_overlap(var1, var2):
     end1 = var1.pos + len(var1.ref) - 1
     end2 = var2.pos + len(var2.ref) - 1
@@ -434,17 +459,19 @@ class VariantTracker:
         if len(alts) == 0:
             return None
         else:
-            return "\t".join(
-                [
-                    ref_seq.id,
-                    str(start + 1),
-                    ".",
-                    ref_seq[start : end + 1],
-                    ",".join(sorted(list(alts))),
-                    ".",
-                    "PASS",
-                    info_field,
-                ]
+            return vcf_record.VcfRecord(
+                "\t".join(
+                    [
+                        ref_seq.id,
+                        str(start + 1),
+                        ".",
+                        ref_seq[start : end + 1],
+                        ",".join(sorted(list(alts))),
+                        ".",
+                        "PASS",
+                        info_field,
+                    ]
+                )
             )
 
     def cluster(self, outprefix, max_ref_length, max_alleles=None):
@@ -467,6 +494,9 @@ class VariantTracker:
             variant_ids = []
             var_count = 0
             report_count = int(len(self.variants) / 20)
+            previous_variants = []
+            previous_variant_ids = []
+            previous_record = None
 
             for var, var_id in self.variants.sorted_iter():
                 var_count += 1
@@ -498,13 +528,41 @@ class VariantTracker:
                 record = self._variant_cluster_to_vcf_line(
                     variants, variant_ids, max_alleles=max_alleles
                 )
-                if record is not None:
-                    print(record, file=f_main)
+                if (
+                    previous_record is not None
+                    and vcf_records_make_same_allele_combination(
+                        previous_record, record, self.ref_seqs
+                    )
+                ):
+                    previous_variants += variants
+                    previous_variant_ids += variant_ids
+                    previous_record = self._variant_cluster_to_vcf_line(
+                        variants, variant_ids, max_alleles=max_alleles
+                    )
+                else:
+                    print_if_not_none(previous_record, f_main)
+                    previous_record = record
+                    previous_variants = variants
+                    previous_variant_ids = variant_ids
+
                 variants = [var]
                 variant_ids = [var_id]
 
             record = self._variant_cluster_to_vcf_line(
                 variants, variant_ids, max_alleles=max_alleles
             )
-            if record is not None:
-                print(record, file=f_main)
+            if (
+                previous_record is not None
+                and vcf_records_make_same_allele_combination(
+                    previous_record, record, self.ref_seqs
+                )
+            ):
+                previous_variants += variants
+                previous_variant_ids += variant_ids
+                previous_record = self._variant_cluster_to_vcf_line(
+                    previous_variants, previous_variant_ids, max_alleles=max_alleles
+                )
+                print_if_not_none(previous_record, f_main)
+            else:
+                print_if_not_none(previous_record, f_main)
+                print_if_not_none(record, f_main)

@@ -9,3 +9,4 @@ ref.2	1	.	T	G	.	FAIL	.	GT	0/0
 ref.2	2	.	G	T,C	.	PASS	.	GT	2
 ref.2	2	.	G	A	.	PASS	.	GT	1/1
 ref.3	5	.	CGATACGT	C	.	PASS	.	GT	1/1
+ref.4	5	.	GC	G	.	PASS	.	GT	1/1

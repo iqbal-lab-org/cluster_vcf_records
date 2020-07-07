@@ -6,3 +6,5 @@ ref.2	1	.	T	C	.	PASS	.	GT	0/0
 ref.2	6	.	G	T	.	PASS	.	GT	1/1
 ref.3	6	.	G	C	.	PASS	.	GT	1/1
 ref.3	7	.	A	G	.	PASS	.	GT	1/1
+ref.4	2	.	GAT	G	.	PASS	.	GT	1/1
+ref.4	5	.	G	C	.	PASS	.	GT	1/1
