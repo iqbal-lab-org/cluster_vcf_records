@@ -2,6 +2,7 @@
 ##contig=<ID=ref.1,length=10>
 ##contig=<ID=ref.2,length=12>
 ##contig=<ID=ref.3,length=15>
+##contig=<ID=ref.4,length=7>
 ##FILTER=<ID=PASS,Description="All filters passed">
 ##INFO=<ID=High_variability,Number=0,Type=Flag,Description="Position is in a region of high variability, with more alleles than the limit of 5">
 #CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT
@@ -13,3 +14,4 @@ ref.2	1	.	T	C	.	PASS	.
 ref.2	2	.	G	A,C	.	PASS	.
 ref.2	6	.	G	T	.	PASS	.
 ref.3	5	.	CGATACGT	C,CCGTACGT,CCTTACGT	.	PASS	High_variability
+ref.4	2	.	GATGC	GATG,GATGGC,GCC	.	PASS	High_variability
