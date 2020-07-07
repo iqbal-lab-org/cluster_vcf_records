@@ -5,10 +5,20 @@ import pytest
 from bitarray import bitarray
 import pyfastaq
 
-from cluster_vcf_records import utils, variant_tracking
+from cluster_vcf_records import utils, variant_tracking, vcf_record
 
 this_dir = os.path.dirname(os.path.abspath(__file__))
 data_dir = os.path.join(this_dir, "data", "variant_tracking")
+
+
+
+def test_vcf_records_make_same_allele_combination():
+    ref_seqs = {"ref1": "GCTGT"}
+    record1 = vcf_record.VcfRecord("ref1\t1\t.\tGCT\tGC,GCGT\t.\t.\t.")
+    record2 = vcf_record.VcfRecord("ref1\t5\t.\tT\tTGG,G\t.\t.\t.")
+    record3 = vcf_record.VcfRecord("ref2\t5\t.\tT\tTGG,G\t.\t.\t.")
+    assert variant_tracking.vcf_records_make_same_allele_combination(record1, record2, ref_seqs)
+    assert not variant_tracking.vcf_records_make_same_allele_combination(record1, record3, ref_seqs)
 
 
 def test_variants_overlap():

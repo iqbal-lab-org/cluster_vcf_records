@@ -29,14 +29,12 @@ def vcf_records_make_same_allele_combination(record1, record2, ref_seqs):
     assert record1.ref_end_pos() < record2.POS
     alleles1 = record1.inferred_var_seqs_plus_flanks(ref_seqs[record1.CHROM], 0)[1]
     alleles2 = record2.inferred_var_seqs_plus_flanks(ref_seqs[record2.CHROM], 0)[1]
+    join_seq = ref_seqs[record1.CHROM][record1.ref_end_pos()+1:record2.POS]
 
     combinations = set()
     for a1 in alleles1:
         for a2 in alleles2:
-            # This is not quite the allele because missing the common sequence
-            # between a1 and a2, but don't care about that. We only care if
-            # the resulting sequence from difference combinations is unique
-            allele = a1 + a2
+            allele = a1 + join_seq + a2
             if allele in combinations:
                 return True
             combinations.add(allele)
