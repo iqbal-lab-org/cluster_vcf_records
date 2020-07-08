@@ -18,18 +18,13 @@ from cluster_vcf_records import allele_combinations, utils, vcf_file_read, vcf_r
 Variant = namedtuple("Variant", ["seq_id", "pos", "ref", "alt"])
 
 
-def print_if_not_none(x, filehandle):
-    if x is not None:
-        print(x, file=filehandle)
-
-
 def vcf_records_make_same_allele_combination(record1, record2, ref_seqs):
     if record1.CHROM != record2.CHROM:
         return False
     assert record1.ref_end_pos() < record2.POS
     alleles1 = record1.inferred_var_seqs_plus_flanks(ref_seqs[record1.CHROM], 0)[1]
     alleles2 = record2.inferred_var_seqs_plus_flanks(ref_seqs[record2.CHROM], 0)[1]
-    join_seq = ref_seqs[record1.CHROM][record1.ref_end_pos()+1:record2.POS]
+    join_seq = ref_seqs[record1.CHROM][record1.ref_end_pos() + 1 : record2.POS]
 
     combinations = set()
     for a1 in alleles1:
@@ -418,6 +413,8 @@ class VariantTracker:
         logging.info("Finished merging VCF files")
 
     def _variant_cluster_to_vcf_line(self, variants, variant_ids, max_alleles=None):
+        if len(variants) == 0:
+            return None
         ref_seq = self.ref_seqs[self.ref_seq_names[variants[0].seq_id]]
         if logging.getLogger().level <= logging.DEBUG:
             logging.debug(f"Clustering variants:")
@@ -455,6 +452,9 @@ class VariantTracker:
             info_field = "High_variability"
 
         if len(alts) == 0:
+            logging.warning("Could not make VCF record from these variants:")
+            for variant in variants:
+                logging.warning("    " + str(variant))
             return None
         else:
             return vcf_record.VcfRecord(
@@ -472,29 +472,57 @@ class VariantTracker:
                 )
             )
 
+    def _print_cluster_vcf_header(self, filehandle, max_alleles):
+        print("##fileformat=VCFv4.2", file=filehandle)
+        for seq in self.ref_seqs.values():
+            print(f"##contig=<ID={seq.id},length={len(seq)}>", file=filehandle)
+        print('##FILTER=<ID=PASS,Description="All filters passed">', file=filehandle)
+        if max_alleles is not None:
+            print(
+                f'##INFO=<ID=High_variability,Number=0,Type=Flag,Description="Position is in a region of high variability, with more alleles than the limit of {max_alleles}">',
+                file=filehandle,
+            )
+        print("#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT", file=filehandle)
+
+    def _init_clusters(self):
+        self.cluster_limit = 5
+        self.clusters = []
+
+    def _merge_last_records_in_clusters(self, max_alleles):
+        while len(self.clusters) > 1:
+            if vcf_records_make_same_allele_combination(
+                self.clusters[-2][0], self.clusters[-1][0], self.ref_seqs
+            ):
+                new_variants = self.clusters[-2][1] + self.clusters[-1][1]
+                new_variant_ids = self.clusters[-2][2] + self.clusters[-1][2]
+                new_record = self._variant_cluster_to_vcf_line(
+                    new_variants, new_variant_ids, max_alleles=max_alleles
+                )
+                if new_record is not None:
+                    self.clusters.pop()
+                    self.clusters[-1] = (new_record, new_variants, new_variant_ids)
+                else:
+                    break
+            else:
+                break
+
+    def _print_first_clusters(self, filehandle):
+        while len(self.clusters) > self.cluster_limit:
+            print(self.clusters[0][0], file=filehandle)
+            self.clusters.pop(0)
+
     def cluster(self, outprefix, max_ref_length, max_alleles=None):
         out_main = f"{outprefix}.vcf"
         out_exclude = f"{outprefix}.excluded.tsv"
 
         with open(out_main, "w") as f_main, open(out_exclude, "w") as f_exclude:
-            print("##fileformat=VCFv4.2", file=f_main)
-            for seq in self.ref_seqs.values():
-                print(f"##contig=<ID={seq.id},length={len(seq)}>", file=f_main)
-            print('##FILTER=<ID=PASS,Description="All filters passed">', file=f_main)
-            if max_alleles is not None:
-                print(
-                    f'##INFO=<ID=High_variability,Number=0,Type=Flag,Description="Position is in a region of high variability, with more alleles than the limit of {max_alleles}">',
-                    file=f_main,
-                )
-            print("#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT", file=f_main)
+            self._print_cluster_vcf_header(f_main, max_alleles)
             print("CHROM\tPOS\tREF\tALT", file=f_exclude)
             variants = []
             variant_ids = []
             var_count = 0
             report_count = int(len(self.variants) / 20)
-            previous_variants = []
-            previous_variant_ids = []
-            previous_record = None
+            self._init_clusters()
 
             for var, var_id in self.variants.sorted_iter():
                 var_count += 1
@@ -526,22 +554,15 @@ class VariantTracker:
                 record = self._variant_cluster_to_vcf_line(
                     variants, variant_ids, max_alleles=max_alleles
                 )
-                if (
-                    previous_record is not None
-                    and vcf_records_make_same_allele_combination(
-                        previous_record, record, self.ref_seqs
-                    )
-                ):
-                    previous_variants += variants
-                    previous_variant_ids += variant_ids
-                    previous_record = self._variant_cluster_to_vcf_line(
-                        variants, variant_ids, max_alleles=max_alleles
-                    )
+                if record is None:
+                    variants = []
+                    variants_ids = []
+                    continue
                 else:
-                    print_if_not_none(previous_record, f_main)
-                    previous_record = record
-                    previous_variants = variants
-                    previous_variant_ids = variant_ids
+                    self.clusters.append((record, variants, variant_ids))
+
+                self._merge_last_records_in_clusters(max_alleles)
+                self._print_first_clusters(f_main)
 
                 variants = [var]
                 variant_ids = [var_id]
@@ -549,18 +570,8 @@ class VariantTracker:
             record = self._variant_cluster_to_vcf_line(
                 variants, variant_ids, max_alleles=max_alleles
             )
-            if (
-                previous_record is not None
-                and vcf_records_make_same_allele_combination(
-                    previous_record, record, self.ref_seqs
-                )
-            ):
-                previous_variants += variants
-                previous_variant_ids += variant_ids
-                previous_record = self._variant_cluster_to_vcf_line(
-                    previous_variants, previous_variant_ids, max_alleles=max_alleles
-                )
-                print_if_not_none(previous_record, f_main)
-            else:
-                print_if_not_none(previous_record, f_main)
-                print_if_not_none(record, f_main)
+            if record is not None:
+                self.clusters.append((record, variants, variant_ids))
+            self._merge_last_records_in_clusters(max_alleles)
+            for c in self.clusters:
+                print(c[0], file=f_main)
