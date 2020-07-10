@@ -18,6 +18,12 @@ from cluster_vcf_records import allele_combinations, utils, vcf_file_read, vcf_r
 Variant = namedtuple("Variant", ["seq_id", "pos", "ref", "alt"])
 
 
+def _run_one_cluster_chunk(tracker, outprefix, max_ref_length, max_alleles, index_range):
+    logging.info(f"Start clustering chunk {index_range[0]}-{index_range[1]}")
+    tracker.cluster_one_chunk(outprefix, max_ref_length, max_alleles=max_alleles, split_start=index_range[0], split_end=index_range[1])
+
+
+
 def vcf_records_make_same_allele_combination(record1, record2, ref_seqs):
     if record1.CHROM != record2.CHROM:
         return False
@@ -287,6 +293,8 @@ class VariantTracker:
         self.ref_fasta = os.path.abspath(ref_fasta)
         self.mem_lmit = mem_limit
         self.variants = Variants()
+        self.cluster_limit = 8
+        self.max_var_gap = 10
         (
             self.ref_seqs,
             self.ref_seq_names,
@@ -491,7 +499,6 @@ class VariantTracker:
         print("#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT", file=filehandle)
 
     def _init_clusters(self):
-        self.cluster_limit = 5
         self.clusters = []
         self.clusters_insertions = set()
         self.clusters_deletions = set()
@@ -513,7 +520,7 @@ class VariantTracker:
         best_merged_index = None
         merged_record, merged_vars, merged_var_ids = self.clusters[-1]
         for i in reversed(range(len(self.clusters) - 1)):
-            if merged_record.CHROM != self.clusters[i][0].CHROM or self.clusters[i][0].ref_end_pos() + 10 < merged_record.POS:
+            if merged_record.CHROM != self.clusters[i][0].CHROM or self.clusters[i][0].ref_end_pos() + self.max_var_gap < merged_record.POS:
                 break
 
             have_same_combos = vcf_records_make_same_allele_combination(self.clusters[i][0], merged_record, self.ref_seqs)
@@ -566,9 +573,71 @@ class VariantTracker:
             self.clusters_insertions = {x-1 for x in self.clusters_insertions}
             self.clusters_deletions = {x-1 for x in self.clusters_deletions}
 
-    def cluster(self, outprefix, max_ref_length, max_alleles=None):
+
+    def find_parallel_cluster_split_points(self, splits):
+        targets = [x * int(len(self.variants) / splits) for x in range(1, splits)]
+        good_count = 0
+        previous_var = None
+        split_ranges = []
+        looking_for_split = False
+        target_index = 0
+
+        for i, (var, var_id) in enumerate(self.variants.sorted_iter()):
+            if not looking_for_split and i > targets[target_index]:
+                if len(var.ref) == len(var.alt) == 1:
+                    looking_for_split = True
+                    good_count = 1
+                    previous_var = var
+                    continue
+
+            if looking_for_split:
+                if len(var.ref) == len(var.alt) == 1:
+                    if var.pos > previous_var.pos:
+                        good_count += 1
+                    previous_var = var
+                else:
+                    good_count = 0
+
+                if good_count > self.cluster_limit + 2:
+                    if len(split_ranges) == 0:
+                        split_ranges.append((0, i))
+                    else:
+                        split_ranges.append((split_ranges[-1][-1]+1, i))
+                    target_index += 1
+                    if target_index >= len(targets):
+                        break
+                    looking_for_split = False
+
+        split_ranges.append((split_ranges[-1][-1]+1, len(self.variants) - 1))
+        return split_ranges
+
+
+    def cluster(self, outprefix, max_ref_length, max_alleles=None, cpus=1):
+        if cpus > 1:
+            split_ranges = self.find_parallel_cluster_split_points(cpus)
+            outprefixes = [f"{outprefix}.{i}" for i in range(len(split_ranges))]
+            logging.info(f"Running clustering in parallel using {cpus} cpus")
+            with multiprocessing.Pool(cpus) as pool:
+                pool.starmap(
+                    _run_one_cluster_chunk,
+                    zip(
+                        itertools.repeat(self),
+                        outprefixes,
+                        itertools.repeat(max_ref_length),
+                        itertools.repeat(max_alleles),
+                        split_ranges
+                    )
+                )
+            utils.cat_vcfs([x + ".vcf" for x in outprefixes], f"{outprefix}.vcf", delete_files=True)
+            utils.cat_tsvs([x + ".excluded.tsv" for x in outprefixes], f"{outprefix}.excluded.tsv",  delete_files=True)
+        else:
+            self.cluster_one_chunk(outprefix, max_ref_length, max_alleles=max_alleles)
+
+
+    def cluster_one_chunk(self, outprefix, max_ref_length, max_alleles=None, split_start=None, split_end=None):
         out_main = f"{outprefix}.vcf"
         out_exclude = f"{outprefix}.excluded.tsv"
+        total_vars = len(self.variants) if split_start is None else split_end - split_start + 1
 
         with open(out_main, "w") as f_main, open(out_exclude, "w") as f_exclude:
             self._print_cluster_vcf_header(f_main, max_alleles)
@@ -576,17 +645,27 @@ class VariantTracker:
             variants = []
             variant_ids = []
             var_count = 0
-            report_count = int(len(self.variants) / 20)
+            report_count = int(total_vars / 10)
             self._init_clusters()
 
-            for var, var_id in self.variants.sorted_iter():
+            for i, (var, var_id) in enumerate(self.variants.sorted_iter()):
+                if split_start is not None:
+                    if i < split_start:
+                        continue
+                    elif i > split_end:
+                        break
+
                 var_count += 1
                 if var_count >= report_count:
-                    pc_complete = round(100 * var_count / len(self.variants))
+                    pc_complete = round(100 * var_count / total_vars)
+                    if split_start is None:
+                        range_string = ""
+                    else:
+                        range_string = f" for split range {split_start}-{split_end}"
                     logging.info(
-                        f"Completed {pc_complete}% ({var_count}/{len(self.variants)}) of variants"
+                        f"Completed {pc_complete}% ({var_count}/{total_vars}) of variants{range_string}"
                     )
-                    report_count += int(len(self.variants) / 20)
+                    report_count += int(total_vars / 10)
 
                 if len(var.ref) > max_ref_length:
                     print(

@@ -1,6 +1,7 @@
 import logging
 import os
 import re
+import shutil
 import subprocess
 import sys
 
@@ -109,3 +110,31 @@ def normalise_vcf(vcf_in, ref_fasta, vcf_out, break_alleles=True):
 
 def rm_rf(filename):
     syscall(f"rm -rf {filename}")
+
+
+def cat_vcfs(vcf_files, outfile, delete_files=False):
+    shutil.copyfile(vcf_files[0], outfile)
+    if delete_files:
+        os.unlink(vcf_files[0])
+    with open(outfile, "a") as f_out:
+        for vcf in vcf_files[1:]:
+            with open(vcf) as f_in:
+                for line in  f_in:
+                    if not line.startswith("#"):
+                        print(line, end="", file=f_out)
+            if delete_files:
+                os.unlink(vcf)
+
+
+def cat_tsvs(tsv_files, outfile, delete_files=False):
+    shutil.copyfile(tsv_files[0], outfile)
+    if delete_files:
+        os.unlink(tsv_files[0])
+    with open(outfile, "a") as f_out:
+        for tsv in tsv_files[1:]:
+            with open(tsv) as f_in:
+                for i, line in  enumerate(f_in):
+                    if i > 1:
+                        print(line, end="", file=f_out)
+            if delete_files:
+                os.unlink(tsv)
