@@ -513,7 +513,7 @@ class VariantTracker:
         best_merged_index = None
         merged_record, merged_vars, merged_var_ids = self.clusters[-1]
         for i in reversed(range(len(self.clusters) - 1)):
-            if merged_record.CHROM != self.clusters[i][0].CHROM or merged_record.ref_end_pos() + 10 < self.clusters[i][0].POS:
+            if merged_record.CHROM != self.clusters[i][0].CHROM or self.clusters[i][0].ref_end_pos() + 10 < merged_record.POS:
                 break
 
             have_same_combos = vcf_records_make_same_allele_combination(self.clusters[i][0], merged_record, self.ref_seqs)
