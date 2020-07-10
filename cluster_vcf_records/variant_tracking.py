@@ -600,6 +600,7 @@ class VariantTracker:
         split_ranges = []
         looking_for_split = False
         target_index = 0
+        finishing_split = None
 
         mask = {}  # ref id -> set of bad genome coords because in indels
         for i, (var, var_id) in enumerate(self.variants.sorted_iter()):
@@ -623,6 +624,15 @@ class VariantTracker:
                         var_in_mask = True
                         break
 
+            if finishing_split is not None:
+                if var.pos == finishing_split:
+                    assert not var_in_mask
+                    split_ranges[-1][-1] = i
+                else:
+                    finishing_split = None
+                    if target_index >= len(targets):
+                        break
+
             if not looking_for_split and i > targets[target_index]:
                 if len(var.ref) == len(var.alt) == 1 and not var_in_mask:
                     looking_for_split = True
@@ -641,15 +651,14 @@ class VariantTracker:
 
                 if good_count > self.cluster_limit + 3:
                     if len(split_ranges) == 0:
-                        split_ranges.append((0, i))
+                        split_ranges.append([0, i])
                     else:
-                        split_ranges.append((split_ranges[-1][-1] + 1, i))
+                        split_ranges.append([split_ranges[-1][-1] + 1, i])
+                    finishing_split = var.pos
                     target_index += 1
-                    if target_index >= len(targets):
-                        break
                     looking_for_split = False
 
-        split_ranges.append((split_ranges[-1][-1] + 1, len(self.variants) - 1))
+        split_ranges.append([split_ranges[-1][-1] + 1, len(self.variants) - 1])
         return split_ranges
 
     def cluster(self, outprefix, max_ref_length, max_alleles=None, cpus=1):
