@@ -1,0 +1,11 @@
+##fileformat=VCFv4.2
+##FILTER=<ID=PASS,Description="All filters passed">
+##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+##INFO=<ID=OLD_VARIANT,Number=.,Type=String,Description="Original chr:pos:ref:alt encoding">
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	sample
+ref.1	2	.	T	TCGC	0	PASS	OLD_VARIANT=ref.1:4:G/GCCG	GT	1/1
+ref.1	3	.	C	G	0	PASS	.	GT	1/1
+ref.1	7	.	AAT	TAG	0	PASS	.	GT	1/1
+ref.2	2	.	G	T	0	PASS	.	GT	1/1
+ref.2	2	.	G	C	0	PASS	.	GT	./.
+ref.2	2	.	G	A	0	PASS	.	GT	1/1

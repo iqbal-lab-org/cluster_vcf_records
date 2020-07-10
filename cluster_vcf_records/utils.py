@@ -86,7 +86,7 @@ def simplify_vcf(
     pyfastaq.utils.close(f_in)
 
 
-def normalise_vcf(vcf_in, ref_fasta, vcf_out):
+def normalise_vcf(vcf_in, ref_fasta, vcf_out, break_alleles=True):
     # Would be nice to pipe all these to save disk IO. ie
     # f"vcfbreakmulti {vcf_in} | vcfallelicprimitives -L 10000 | vt normalize -r {ref_fasta} - | vcfuniq > {vcf_out}"
     # But am concerned about errors, where error code getting lost in pipes.
@@ -95,11 +95,15 @@ def normalise_vcf(vcf_in, ref_fasta, vcf_out):
     vcf_allelic = f"{vcf_out}.2.allelicprimitives.vcf"
     vcf_normalize = f"{vcf_out}.3.normalize.vcf"
     syscall(f"vcfbreakmulti {vcf_in} > {vcf_breakmulti}")
-    syscall(f"vcfallelicprimitives -L 10000 {vcf_breakmulti} > {vcf_allelic}")
+    if break_alleles:
+        syscall(f"vcfallelicprimitives -L 10000 {vcf_breakmulti} > {vcf_allelic}")
+    else:
+        vcf_allelic = vcf_breakmulti
     syscall(f"vt normalize -r {ref_fasta} {vcf_allelic} > {vcf_normalize}")
     syscall(f"vcfuniq {vcf_normalize} > {vcf_out}")
     os.unlink(vcf_breakmulti)
-    os.unlink(vcf_allelic)
+    if break_alleles:
+        os.unlink(vcf_allelic)
     os.unlink(vcf_normalize)
 
 

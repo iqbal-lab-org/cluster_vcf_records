@@ -41,3 +41,11 @@ def test_normalise_vcf():
     # We don't care about those, so just check the actual records.
     assert got_vcf_records == expected_vcf_records
     os.unlink(tmp_out)
+
+    # test again but without breaking alleles into separate records
+    utils.normalise_vcf(infile, ref_fa, tmp_out, break_alleles=False)
+    expect = os.path.join(data_dir, "normalise_vcf.out.no_break_alleles.vcf")
+    expected_header, expected_vcf_records = vcf_file_read.vcf_file_to_list(expect)
+    got_header, got_vcf_records = vcf_file_read.vcf_file_to_list(tmp_out)
+    assert got_vcf_records == expected_vcf_records
+    os.unlink(tmp_out)

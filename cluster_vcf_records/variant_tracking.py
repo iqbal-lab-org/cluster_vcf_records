@@ -42,7 +42,9 @@ def variants_overlap(var1, var2):
     return var1.seq_id == var2.seq_id and var1.pos <= end2 and var2.pos <= end1
 
 
-def _load_one_vcf_file(vcf_file, ref_seqs, ref_seq_to_id, ref_fasta, temp_dir):
+def _load_one_vcf_file(
+    vcf_file, ref_seqs, ref_seq_to_id, ref_fasta, temp_dir, break_alleles
+):
     sample = vcf_file_read.get_sample_name_from_vcf_file(vcf_file)
     if sample is None:
         raise Exception(f"Error getting sample name from vcf file {vcf_file}")
@@ -50,7 +52,9 @@ def _load_one_vcf_file(vcf_file, ref_seqs, ref_seq_to_id, ref_fasta, temp_dir):
     simplified_vcf = os.path.join(tmpdir, "simplified.vcf")
     normalized_vcf = os.path.join(tmpdir, "normalized.vcf")
     utils.simplify_vcf(vcf_file, simplified_vcf, ref_seqs=ref_seqs)
-    utils.normalise_vcf(simplified_vcf, ref_fasta, normalized_vcf)
+    utils.normalise_vcf(
+        simplified_vcf, ref_fasta, normalized_vcf, break_alleles=break_alleles
+    )
     os.unlink(simplified_vcf)
     variants = []
 
@@ -340,6 +344,7 @@ class VariantTracker:
         mem_limit=2,
         force=False,
         sample_limit=None,
+        break_alleles=True,
     ):
         if force:
             utils.rm_rf(self.root_dir)
@@ -371,6 +376,7 @@ class VariantTracker:
                         itertools.repeat(self.ref_seq_to_id),
                         itertools.repeat(self.ref_fasta),
                         itertools.repeat(temp_dir),
+                        itertools.repeat(break_alleles),
                     ),
                 )
 

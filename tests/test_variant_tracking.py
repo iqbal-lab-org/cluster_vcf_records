@@ -11,14 +11,17 @@ this_dir = os.path.dirname(os.path.abspath(__file__))
 data_dir = os.path.join(this_dir, "data", "variant_tracking")
 
 
-
 def test_vcf_records_make_same_allele_combination():
     ref_seqs = {"ref1": "GCTGT"}
     record1 = vcf_record.VcfRecord("ref1\t1\t.\tGCT\tGC,GCGT\t.\t.\t.")
     record2 = vcf_record.VcfRecord("ref1\t5\t.\tT\tTGG,G\t.\t.\t.")
     record3 = vcf_record.VcfRecord("ref2\t5\t.\tT\tTGG,G\t.\t.\t.")
-    assert variant_tracking.vcf_records_make_same_allele_combination(record1, record2, ref_seqs)
-    assert not variant_tracking.vcf_records_make_same_allele_combination(record1, record3, ref_seqs)
+    assert variant_tracking.vcf_records_make_same_allele_combination(
+        record1, record2, ref_seqs
+    )
+    assert not variant_tracking.vcf_records_make_same_allele_combination(
+        record1, record3, ref_seqs
+    )
 
 
 def test_variants_overlap():
@@ -243,7 +246,7 @@ def test_load_one_vcf_file():
     utils.rm_rf(tmp_dir)
     os.mkdir(tmp_dir)
     got_sample, got_variants = variant_tracking._load_one_vcf_file(
-        vcf_file, ref_seqs, ref_seq_to_id, ref_fasta, tmp_dir
+        vcf_file, ref_seqs, ref_seq_to_id, ref_fasta, tmp_dir, True
     )
     assert got_sample == "sample_42"
     expect_variants = [
