@@ -18,10 +18,17 @@ from cluster_vcf_records import allele_combinations, utils, vcf_file_read, vcf_r
 Variant = namedtuple("Variant", ["seq_id", "pos", "ref", "alt"])
 
 
-def _run_one_cluster_chunk(tracker, outprefix, max_ref_length, max_alleles, index_range):
+def _run_one_cluster_chunk(
+    tracker, outprefix, max_ref_length, max_alleles, index_range
+):
     logging.info(f"Start clustering chunk {index_range[0]}-{index_range[1]}")
-    tracker.cluster_one_chunk(outprefix, max_ref_length, max_alleles=max_alleles, split_start=index_range[0], split_end=index_range[1])
-
+    tracker.cluster_one_chunk(
+        outprefix,
+        max_ref_length,
+        max_alleles=max_alleles,
+        split_start=index_range[0],
+        split_end=index_range[1],
+    )
 
 
 def vcf_records_make_same_allele_combination(record1, record2, ref_seqs):
@@ -513,17 +520,27 @@ class VariantTracker:
         self.clusters.append(to_append)
 
     def _merge_last_records_in_clusters(self, max_alleles):
-        if len(self.clusters) < 2 or len(self.clusters_insertions) == 0 or len(self.clusters_deletions) == 0:
+        if (
+            len(self.clusters) < 2
+            or len(self.clusters_insertions) == 0
+            or len(self.clusters_deletions) == 0
+        ):
             return
 
         best_merged = None
         best_merged_index = None
         merged_record, merged_vars, merged_var_ids = self.clusters[-1]
         for i in reversed(range(len(self.clusters) - 1)):
-            if merged_record.CHROM != self.clusters[i][0].CHROM or self.clusters[i][0].ref_end_pos() + self.max_var_gap < merged_record.POS:
+            if (
+                merged_record.CHROM != self.clusters[i][0].CHROM
+                or self.clusters[i][0].ref_end_pos() + self.max_var_gap
+                < merged_record.POS
+            ):
                 break
 
-            have_same_combos = vcf_records_make_same_allele_combination(self.clusters[i][0], merged_record, self.ref_seqs)
+            have_same_combos = vcf_records_make_same_allele_combination(
+                self.clusters[i][0], merged_record, self.ref_seqs
+            )
             if i == 0 and not have_same_combos:
                 break
 
@@ -540,11 +557,14 @@ class VariantTracker:
                 best_merged_index = i
 
         if best_merged_index is not None:
-            self.clusters_insertions = {x for x in self.clusters_insertions if x < best_merged_index}
-            self.clusters_deletions = {x for x in self.clusters_deletions if x < best_merged_index}
+            self.clusters_insertions = {
+                x for x in self.clusters_insertions if x < best_merged_index
+            }
+            self.clusters_deletions = {
+                x for x in self.clusters_deletions if x < best_merged_index
+            }
             del self.clusters[best_merged_index:]
             self._append_to_clusters(best_merged)
-
 
     def _merge_last_records_in_clusters_old(self, max_alleles):
         while len(self.clusters) > 1:
@@ -570,11 +590,10 @@ class VariantTracker:
             self.clusters.pop(0)
             self.clusters_insertions.discard(0)
             self.clusters_deletions.discard(0)
-            self.clusters_insertions = {x-1 for x in self.clusters_insertions}
-            self.clusters_deletions = {x-1 for x in self.clusters_deletions}
+            self.clusters_insertions = {x - 1 for x in self.clusters_insertions}
+            self.clusters_deletions = {x - 1 for x in self.clusters_deletions}
 
-
-    def find_parallel_cluster_split_points(self, splits):
+    def find_parallel_cluster_split_points(self, max_ref_length, splits):
         targets = [x * int(len(self.variants) / splits) for x in range(1, splits)]
         good_count = 0
         previous_var = None
@@ -582,39 +601,60 @@ class VariantTracker:
         looking_for_split = False
         target_index = 0
 
+        mask = {}  # ref id -> set of bad genome coords because in indels
         for i, (var, var_id) in enumerate(self.variants.sorted_iter()):
+            if len(var.ref) > max_ref_length:
+                continue
+
+            if len(var.ref) > 1 or len(var.alt) > 1:
+                if var.seq_id not in mask:
+                    mask[var.seq_id] = set()
+                for pos in range(var.pos, var.pos + len(var.ref)):
+                    mask[var.seq_id].add(pos)
+
+        for i, (var, var_id) in enumerate(self.variants.sorted_iter()):
+            if len(var.ref) > max_ref_length:
+                continue
+
+            var_in_mask = False
+            if var.seq_id in mask:
+                for pos in range(var.pos, var.pos + len(var.ref)):
+                    if pos in mask[var.seq_id]:
+                        var_in_mask = True
+                        break
+
             if not looking_for_split and i > targets[target_index]:
-                if len(var.ref) == len(var.alt) == 1:
+                if len(var.ref) == len(var.alt) == 1 and not var_in_mask:
                     looking_for_split = True
                     good_count = 1
                     previous_var = var
                     continue
 
             if looking_for_split:
-                if len(var.ref) == len(var.alt) == 1:
-                    if var.pos > previous_var.pos:
+                if len(var.ref) == len(var.alt) == 1 and not var_in_mask:
+                    if previous_var is None or var.pos > previous_var.pos:
                         good_count += 1
                     previous_var = var
                 else:
                     good_count = 0
+                    previous_var = None
 
-                if good_count > self.cluster_limit + 2:
+                if good_count > self.cluster_limit + 3:
                     if len(split_ranges) == 0:
                         split_ranges.append((0, i))
                     else:
-                        split_ranges.append((split_ranges[-1][-1]+1, i))
+                        split_ranges.append((split_ranges[-1][-1] + 1, i))
                     target_index += 1
                     if target_index >= len(targets):
                         break
                     looking_for_split = False
 
-        split_ranges.append((split_ranges[-1][-1]+1, len(self.variants) - 1))
+        split_ranges.append((split_ranges[-1][-1] + 1, len(self.variants) - 1))
         return split_ranges
-
 
     def cluster(self, outprefix, max_ref_length, max_alleles=None, cpus=1):
         if cpus > 1:
-            split_ranges = self.find_parallel_cluster_split_points(cpus)
+            split_ranges = self.find_parallel_cluster_split_points(max_ref_length, cpus)
             outprefixes = [f"{outprefix}.{i}" for i in range(len(split_ranges))]
             logging.info(f"Running clustering in parallel using {cpus} cpus")
             with multiprocessing.Pool(cpus) as pool:
@@ -625,19 +665,33 @@ class VariantTracker:
                         outprefixes,
                         itertools.repeat(max_ref_length),
                         itertools.repeat(max_alleles),
-                        split_ranges
-                    )
+                        split_ranges,
+                    ),
                 )
-            utils.cat_vcfs([x + ".vcf" for x in outprefixes], f"{outprefix}.vcf", delete_files=True)
-            utils.cat_tsvs([x + ".excluded.tsv" for x in outprefixes], f"{outprefix}.excluded.tsv",  delete_files=True)
+            utils.cat_vcfs(
+                [x + ".vcf" for x in outprefixes], f"{outprefix}.vcf", delete_files=True
+            )
+            utils.cat_tsvs(
+                [x + ".excluded.tsv" for x in outprefixes],
+                f"{outprefix}.excluded.tsv",
+                delete_files=True,
+            )
         else:
             self.cluster_one_chunk(outprefix, max_ref_length, max_alleles=max_alleles)
 
-
-    def cluster_one_chunk(self, outprefix, max_ref_length, max_alleles=None, split_start=None, split_end=None):
+    def cluster_one_chunk(
+        self,
+        outprefix,
+        max_ref_length,
+        max_alleles=None,
+        split_start=None,
+        split_end=None,
+    ):
         out_main = f"{outprefix}.vcf"
         out_exclude = f"{outprefix}.excluded.tsv"
-        total_vars = len(self.variants) if split_start is None else split_end - split_start + 1
+        total_vars = (
+            len(self.variants) if split_start is None else split_end - split_start + 1
+        )
 
         with open(out_main, "w") as f_main, open(out_exclude, "w") as f_exclude:
             self._print_cluster_vcf_header(f_main, max_alleles)
