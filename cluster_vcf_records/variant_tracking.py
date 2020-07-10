@@ -493,8 +493,53 @@ class VariantTracker:
     def _init_clusters(self):
         self.cluster_limit = 5
         self.clusters = []
+        self.clusters_insertions = set()
+        self.clusters_deletions = set()
+
+    def _append_to_clusters(self, to_append):
+        has_insertion = any([len(to_append[0].REF) < len(x) for x in to_append[0].ALT])
+        has_deletion = any([len(to_append[0].REF) > len(x) for x in to_append[0].ALT])
+        if has_insertion:
+            self.clusters_insertions.add(len(self.clusters))
+        if has_deletion:
+            self.clusters_deletions.add(len(self.clusters))
+        self.clusters.append(to_append)
 
     def _merge_last_records_in_clusters(self, max_alleles):
+        if len(self.clusters) < 2 or len(self.clusters_insertions) == 0 or len(self.clusters_deletions) == 0:
+            return
+
+        best_merged = None
+        best_merged_index = None
+        merged_record, merged_vars, merged_var_ids = self.clusters[-1]
+        for i in reversed(range(len(self.clusters) - 1)):
+            if merged_record.CHROM != self.clusters[i][0].CHROM or merged_record.ref_end_pos() + 10 < self.clusters[i][0].POS:
+                break
+
+            have_same_combos = vcf_records_make_same_allele_combination(self.clusters[i][0], merged_record, self.ref_seqs)
+            if i == 0 and not have_same_combos:
+                break
+
+            merged_vars = self.clusters[i][1] + merged_vars
+            merged_var_ids = self.clusters[i][2] + merged_var_ids
+            merged_record = self._variant_cluster_to_vcf_line(
+                merged_vars, merged_var_ids, max_alleles=max_alleles
+            )
+            if merged_record is None:
+                break
+
+            if have_same_combos:
+                best_merged = (merged_record, merged_vars, merged_var_ids)
+                best_merged_index = i
+
+        if best_merged_index is not None:
+            self.clusters_insertions = {x for x in self.clusters_insertions if x < best_merged_index}
+            self.clusters_deletions = {x for x in self.clusters_deletions if x < best_merged_index}
+            del self.clusters[best_merged_index:]
+            self._append_to_clusters(best_merged)
+
+
+    def _merge_last_records_in_clusters_old(self, max_alleles):
         while len(self.clusters) > 1:
             if vcf_records_make_same_allele_combination(
                 self.clusters[-2][0], self.clusters[-1][0], self.ref_seqs
@@ -516,6 +561,10 @@ class VariantTracker:
         while len(self.clusters) > self.cluster_limit:
             print(self.clusters[0][0], file=filehandle)
             self.clusters.pop(0)
+            self.clusters_insertions.discard(0)
+            self.clusters_deletions.discard(0)
+            self.clusters_insertions = {x-1 for x in self.clusters_insertions}
+            self.clusters_deletions = {x-1 for x in self.clusters_deletions}
 
     def cluster(self, outprefix, max_ref_length, max_alleles=None):
         out_main = f"{outprefix}.vcf"
@@ -565,7 +614,7 @@ class VariantTracker:
                     variants_ids = []
                     continue
                 else:
-                    self.clusters.append((record, variants, variant_ids))
+                    self._append_to_clusters((record, variants, variant_ids))
 
                 self._merge_last_records_in_clusters(max_alleles)
                 self._print_first_clusters(f_main)
@@ -577,7 +626,7 @@ class VariantTracker:
                 variants, variant_ids, max_alleles=max_alleles
             )
             if record is not None:
-                self.clusters.append((record, variants, variant_ids))
+                self._append_to_clusters((record, variants, variant_ids))
             self._merge_last_records_in_clusters(max_alleles)
             for c in self.clusters:
                 print(c[0], file=f_main)
