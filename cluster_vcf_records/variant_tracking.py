@@ -381,9 +381,7 @@ class VariantTracker:
 
         for i in range(0, len(infiles), cpus):
             with multiprocessing.Pool(cpus) as pool:
-                new_variants_lists = (
-                    self.var_block_filesew_variants_lists
-                ) = pool.starmap(
+                new_variants_lists = pool.starmap(
                     _load_one_vcf_file,
                     zip(
                         infiles[i : i + cpus],
