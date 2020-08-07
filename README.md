@@ -6,7 +6,18 @@ Python3 package to cluster VCF records.
 Used by gramtools and minos - written specifically for those projects and no others.
 
 ## Install
-    pip3 install wheel cluster_vcf_records
+
+### pypi
+
+```sh
+pip install wheel cluster_vcf_records
+```
+
+### conda
+
+```sh
+conda install -c bioconda cluster_vcf_records
+```
 
 ## Usage
 ```python
