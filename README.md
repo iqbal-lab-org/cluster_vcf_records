@@ -5,6 +5,15 @@ Python3 package to cluster VCF records.
 
 Used by gramtools and minos - written specifically for those projects and no others.
 
+## Dependencies
+
+* [vt](https://genome.sph.umich.edu/wiki/Vt)
+* [vcflib](https://github.com/vcflib/vcflib). Specifically, needs `vcfbreakmulti`,
+  `vcfallelicprimitives`, and `vcfuniq` to be installed and in your `$PATH`.
+* [bcftools](https://samtools.github.io/bcftools/). This is optional. Only
+  needed if you need to read bcf files.
+
+
 ## Install
     pip3 install wheel cluster_vcf_records
 
