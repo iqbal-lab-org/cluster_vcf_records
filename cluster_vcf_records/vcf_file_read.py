@@ -1,11 +1,37 @@
+import gzip
 import itertools
 import operator
 import logging
 import multiprocessing
+import os
 
 import pyfastaq
 
 from cluster_vcf_records import vcf_record
+
+
+def open_vcf_file_for_reading(filename):
+    if filename.endswith(".gz"):
+        try:
+            return gzip.open(filename, "rt")
+        except:
+            raise OSError(
+                f"Error opening gzip file '{filename}'. Cannot continue"
+            )
+    elif filename.endswith(".bcf"):
+        try:
+            return os.popen('bcftools view ' + filename)
+        except:
+            raise OSError(
+                f"Error opening bcf file '{filename}'. Cannot continue. Is bcftools installed?"
+            )
+    else:
+        try:
+            return open(filename)
+        except:
+            raise OSError(
+                f"Error opening file '{filename}'. Cannot continue"
+            )
 
 
 def vcf_file_to_dict(
@@ -23,7 +49,7 @@ def vcf_file_to_dict(
 ):
     header_lines = []
     records = {}
-    f = pyfastaq.utils.open_file_read(infile)
+    f = open_vcf_file_for_reading(infile)
     count_keys = [
         "keep",
         "not_homozygous",
@@ -121,7 +147,7 @@ def vcf_file_to_dict(
         records[record.CHROM].append(record)
         counts["keep"] += 1
 
-    pyfastaq.utils.close(f)
+    f.close()
     logging.info(
         "Loaded file "
         + infile
@@ -139,15 +165,13 @@ def vcf_file_to_dict(
 def vcf_file_to_list(infile):
     header_lines = []
     records = []
-    f = pyfastaq.utils.open_file_read(infile)
+    with open_vcf_file_for_reading(infile) as f:
+        for line in f:
+            if line.startswith("#"):
+                header_lines.append(line.rstrip())
+            else:
+                records.append(vcf_record.VcfRecord(line))
 
-    for line in f:
-        if line.startswith("#"):
-            header_lines.append(line.rstrip())
-        else:
-            records.append(vcf_record.VcfRecord(line))
-
-    pyfastaq.utils.close(f)
     return header_lines, records
 
 
@@ -217,25 +241,25 @@ def get_sample_name_from_vcf_header_lines(header_lines):
 
 
 def vcf_file_has_at_least_one_record(infile):
-    f = pyfastaq.utils.open_file_read(infile)
+    with open_vcf_file_for_reading(infile) as f:
+        for line in f:
+            if line.startswith("#"):
+                pass
+            else:
+                # Check we can load a record
+                vcf_record.VcfRecord(line)
+                return True
 
-    for line in f:
-        if line.startswith("#"):
-            pass
-        else:
-            # Check we can load a record
-            vcf_record.VcfRecord(line)
-            pyfastaq.utils.close(f)
-            return True
-
-    pyfastaq.utils.close(f)
     return False
 
 
 def get_header_lines_from_vcf_file(infile):
-    f = pyfastaq.utils.open_file_read(infile)
-    header_lines = [line.rstrip() for line in f if line.startswith("#")]
-    pyfastaq.utils.close(f)
+    with open_vcf_file_for_reading(infile) as f:
+        header_lines = []
+        for line in f:
+            if not line.startswith("#"):
+                break
+            header_lines.append(line.rstrip())
     return header_lines
 
 

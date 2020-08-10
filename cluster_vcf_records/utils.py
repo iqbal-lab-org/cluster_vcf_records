@@ -7,7 +7,7 @@ import sys
 
 import pyfastaq
 
-from cluster_vcf_records import vcf_record
+from cluster_vcf_records import vcf_record, vcf_file_read
 
 
 def syscall(command):
@@ -41,7 +41,7 @@ def simplify_vcf(
     with just GT.
     If ref_Seqs is given, should be a dictionary of reference name -> sequence.
     Any calls where the REF string does not match the sequence is removed."""
-    f_in = pyfastaq.utils.open_file_read(infile)
+    f_in = vcf_file_read.open_vcf_file_for_reading(infile)
     with open(outfile, "w") as f_out:
         for line in f_in:
             if line.startswith("#"):
@@ -84,7 +84,7 @@ def simplify_vcf(
                                 record.set_format_key_value("GT", "1/2")
                 print(record, file=f_out)
 
-    pyfastaq.utils.close(f_in)
+    f_in.close()
 
 
 def normalise_vcf(vcf_in, ref_fasta, vcf_out, break_alleles=True):

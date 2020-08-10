@@ -71,7 +71,7 @@ def _load_one_vcf_file(
     os.unlink(simplified_vcf)
     variants = []
 
-    with open(normalized_vcf) as f:
+    with vcf_file_read.open_vcf_file_for_reading(normalized_vcf) as f:
         for line in f:
             if line.startswith("#"):
                 continue

@@ -10,6 +10,34 @@ data_dir = os.path.join(this_dir, "data", "vcf_file_read")
 
 
 class TestVcfFileRead(unittest.TestCase):
+    def test_open_vcf_file_for_reading(self):
+        expect = [
+            "##fileformat=VCFv4.2\n",
+            '##FILTER=<ID=PASS,Description="All filters passed">\n',
+            "##contig=<ID=ref,length=1000>\n",
+            '##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">\n',
+	    "#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tsample_42\n",
+            "ref\t42\t.\tT\tG\t42.42\t.\t.\tGT\t1/1\n",
+        ]
+
+        vcf_in = os.path.join(data_dir, "open_vcf_file_for_reading.vcf")
+        with vcf_file_read.open_vcf_file_for_reading(vcf_in) as f:
+            got = list(f.readlines())
+        self.assertEqual(expect, got)
+
+        with vcf_file_read.open_vcf_file_for_reading(vcf_in + ".gz") as f:
+            got = list(f.readlines())
+        self.assertEqual(expect, got)
+
+        # bcftools adds in some header lines when converting bcf -> vcf.
+        # Ignore these lines. They have version numbers and the current
+        # time in them, which we can't predict.
+        bcf_in = os.path.join(data_dir, "open_vcf_file_for_reading.bcf")
+        with vcf_file_read.open_vcf_file_for_reading(bcf_in) as f:
+            got = [x for x in f.readlines() if not x.startswith("##bcftools")]
+        self.assertEqual(expect, got)
+
+
     def test_vcf_file_to_dict(self):
         """test vcf_file_to_dict"""
         ref_seqs = {
