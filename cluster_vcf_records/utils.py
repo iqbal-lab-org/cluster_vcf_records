@@ -5,8 +5,6 @@ import shutil
 import subprocess
 import sys
 
-import pyfastaq
-
 from cluster_vcf_records import vcf_record, vcf_file_read
 
 

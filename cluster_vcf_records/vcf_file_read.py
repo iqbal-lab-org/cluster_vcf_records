@@ -5,8 +5,6 @@ import logging
 import multiprocessing
 import os
 
-import pyfastaq
-
 from cluster_vcf_records import vcf_record
 
 
