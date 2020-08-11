@@ -10,7 +10,7 @@ Used by gramtools and minos - written specifically for those projects and no oth
 ### pypi
 
 ```sh
-pip install wheel cluster_vcf_records
+pip3 install wheel cluster_vcf_records
 ```
 
 ### conda
