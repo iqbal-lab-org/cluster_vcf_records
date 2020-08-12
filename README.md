@@ -15,7 +15,18 @@ Used by gramtools and minos - written specifically for those projects and no oth
 
 
 ## Install
-    pip3 install wheel cluster_vcf_records
+
+### pypi
+
+```sh
+pip3 install wheel cluster_vcf_records
+```
+
+### conda
+
+```sh
+conda install -c bioconda cluster_vcf_records
+```
 
 ## Usage
 ```python
