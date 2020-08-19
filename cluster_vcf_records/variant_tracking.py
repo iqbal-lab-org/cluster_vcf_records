@@ -331,6 +331,7 @@ class VariantTracker:
     def _add_var_block_file(self):
         filename = f"block.{len(self.var_block_files)}.tsv.gz"
         self.var_block_files.append(filename)
+        self.var_block_tabixes.append(os.path.join(self.root_dir, filename))
         self.samples.append([])
 
     def _write_last_var_block_file(self, var_block):
@@ -374,6 +375,7 @@ class VariantTracker:
             made_temp_dir = True
 
         self.var_block_files = []
+        self.var_block_tabixes = []
         self.samples = []
         self._add_var_block_file()
         self.variants = Variants()
