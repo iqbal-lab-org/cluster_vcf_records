@@ -7,7 +7,7 @@ with open("requirements.txt") as f:
 
 setup(
     name="cluster_vcf_records",
-    version="0.12.4",
+    version="0.13.0",
     description="Package to cluster VCF records. For use by gramtools and minos",
     packages=find_packages(),
     author="Martin Hunt",
