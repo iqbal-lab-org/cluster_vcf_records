@@ -26,6 +26,10 @@ def test_simplify_vcf():
     expect = os.path.join(data_dir, "simplify_vcf.expect_keep_ref_calls.vcf")
     assert filecmp.cmp(tmp_out, expect, shallow=False)
     os.unlink(tmp_out)
+    utils.simplify_vcf(infile, tmp_out, ref_seqs=ref_seqs, keep_all_alleles=True)
+    expect = os.path.join(data_dir, "simplify_vcf.expect_keep_all_alleles.vcf")
+    assert filecmp.cmp(tmp_out, expect, shallow=False)
+    os.unlink(tmp_out)
 
 
 def test_normalise_vcf():

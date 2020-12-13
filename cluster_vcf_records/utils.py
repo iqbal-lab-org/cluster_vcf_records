@@ -32,7 +32,12 @@ def syscall(command):
 
 
 def simplify_vcf(
-    infile, outfile, ref_seqs=None, keep_ref_calls=False, max_ref_call_alleles=10
+    infile,
+    outfile,
+    ref_seqs=None,
+    keep_ref_calls=False,
+    max_ref_call_alleles=10,
+    keep_all_alleles=False,
 ):
     """Removes records that are all null calls and (optionally) ref calls.
     If record has GT, removes all non-called alleles and replaces FORMAT
@@ -63,8 +68,11 @@ def simplify_vcf(
                     if "." in gt_indexes:
                         continue
                     gt_indexes = {int(x) for x in gt_indexes}
+                    original_gt = record.FORMAT["GT"]
                     record.FORMAT.clear()
-                    if gt_indexes == {0}:
+                    if keep_all_alleles:
+                        record.FORMAT = {"GT": original_gt}
+                    elif gt_indexes == {0}:
                         if keep_ref_calls and len(record.ALT) <= max_ref_call_alleles:
                             record.set_format_key_value("GT", "0/0")
                         else:
@@ -117,7 +125,7 @@ def cat_vcfs(vcf_files, outfile, delete_files=False):
     with open(outfile, "a") as f_out:
         for vcf in vcf_files[1:]:
             with open(vcf) as f_in:
-                for line in  f_in:
+                for line in f_in:
                     if not line.startswith("#"):
                         print(line, end="", file=f_out)
             if delete_files:
@@ -131,7 +139,7 @@ def cat_tsvs(tsv_files, outfile, delete_files=False):
     with open(outfile, "a") as f_out:
         for tsv in tsv_files[1:]:
             with open(tsv) as f_in:
-                for i, line in  enumerate(f_in):
+                for i, line in enumerate(f_in):
                     if i > 1:
                         print(line, end="", file=f_out)
             if delete_files:

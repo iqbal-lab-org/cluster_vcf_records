@@ -245,8 +245,18 @@ def test_load_one_vcf_file():
     tmp_dir = "tmp.load_one_vcf_file"
     utils.rm_rf(tmp_dir)
     os.mkdir(tmp_dir)
-    got_sample, got_variants = variant_tracking._load_one_vcf_file(
-        vcf_file, ref_seqs, ref_seq_to_id, ref_fasta, tmp_dir, True
+    (
+        got_sample,
+        got_variants,
+        got_uncalled_variants,
+    ) = variant_tracking._load_one_vcf_file(
+        vcf_file,
+        ref_seqs,
+        ref_seq_to_id,
+        ref_fasta,
+        tmp_dir,
+        True,
+        True,
     )
     assert got_sample == "sample_42"
     expect_variants = [
@@ -258,6 +268,37 @@ def test_load_one_vcf_file():
         variant_tracking.Variant(seq_id=1, pos=1, ref="G", alt="A"),
     ]
     assert got_variants == expect_variants
+    assert got_uncalled_variants == []
+
+    (
+        got_sample,
+        got_variants,
+        got_uncalled_variants,
+    ) = variant_tracking._load_one_vcf_file(
+        vcf_file,
+        ref_seqs,
+        ref_seq_to_id,
+        ref_fasta,
+        tmp_dir,
+        True,
+        False,
+    )
+    assert got_sample == "sample_42"
+    expect_variants = [
+        variant_tracking.Variant(seq_id=0, pos=1, ref="T", alt="TCGC"),
+        variant_tracking.Variant(seq_id=0, pos=2, ref="C", alt="G"),
+        variant_tracking.Variant(seq_id=0, pos=6, ref="A", alt="T"),
+        variant_tracking.Variant(seq_id=0, pos=8, ref="T", alt="G"),
+        variant_tracking.Variant(seq_id=1, pos=1, ref="G", alt="C"),
+        variant_tracking.Variant(seq_id=1, pos=1, ref="G", alt="A"),
+    ]
+    assert got_variants == expect_variants
+    expect_uncalled_variants = [
+        variant_tracking.Variant(seq_id=1, pos=0, ref="T", alt="C"),
+        variant_tracking.Variant(seq_id=1, pos=0, ref="T", alt="G"),
+        variant_tracking.Variant(seq_id=1, pos=1, ref="G", alt="T"),
+    ]
+    assert got_uncalled_variants == expect_uncalled_variants
     os.rmdir(tmp_dir)
 
 
@@ -274,7 +315,9 @@ def test_VariantTracker_make_from_vcf_then_save_then_load_then_cluster():
     os.mkdir(tmp_dir)
     root_dir = "tmp.construct_from_vcf_files"
     tracker = variant_tracking.VariantTracker(root_dir, ref_fasta)
-    tracker.merge_vcf_files(vcf_files, temp_dir=tmp_dir, cpus=2, sample_limit=2)
+    tracker.merge_vcf_files(
+        vcf_files, temp_dir=tmp_dir, cpus=2, sample_limit=2, many_files=True
+    )
 
     # Check variables ok and files made ok
     expect_samples = [["sample_1", "sample_2"], ["sample_3"]]
@@ -333,5 +376,36 @@ def test_VariantTracker_make_from_vcf_then_save_then_load_then_cluster():
     os.unlink(vcf_out)
     os.unlink(excluded_out)
 
+    utils.rm_rf(tmp_dir)
+    utils.rm_rf(root_dir)
+
+
+def test_VariantTracker_make_from_vcf_then_save_then_load_then_cluster_not_many_files():
+    # this test is the same as the previous test, except we use the
+    # many_files = False option. This means we also keep all uncalled variants.
+    # We do a basic check here that this happens. The previous test is more detailed
+    # and checks contents of more files. We'd just be repeating that here, so
+    # no point.
+    #
+    # Create from VCF files and save to directory
+    vcf_files = [
+        os.path.join(data_dir, f"construct_from_vcf_files.{i}.vcf") for i in (1, 2, 3)
+    ]
+    ref_fasta = os.path.join(data_dir, "construct_from_vcf_files.ref.fa")
+    root_dir = "tmp.construct_from_vcf_files"
+    utils.rm_rf(root_dir)
+    tmp_dir = f"{root_dir}.tmp"
+    utils.rm_rf(tmp_dir)
+    os.mkdir(tmp_dir)
+    root_dir = "tmp.construct_from_vcf_files"
+    tracker = variant_tracking.VariantTracker(root_dir, ref_fasta)
+    tracker.merge_vcf_files(
+        vcf_files, temp_dir=tmp_dir, cpus=2, sample_limit=2, many_files=False
+    )
+    # Check variables ok and files made ok
+    expect_samples = [["sample_1", "sample_2"], ["sample_3", "uncalled"]]
+    expect_block_files = ["block.0.tsv.gz", "block.1.tsv.gz"]
+    assert tracker.samples == expect_samples
+    assert tracker.var_block_files == expect_block_files
     utils.rm_rf(tmp_dir)
     utils.rm_rf(root_dir)

@@ -56,7 +56,13 @@ def variants_overlap(var1, var2):
 
 
 def _load_one_vcf_file(
-    vcf_file, ref_seqs, ref_seq_to_id, ref_fasta, temp_dir, break_alleles
+    vcf_file,
+    ref_seqs,
+    ref_seq_to_id,
+    ref_fasta,
+    temp_dir,
+    break_alleles,
+    many_files,
 ):
     sample = vcf_file_read.get_sample_name_from_vcf_file(vcf_file)
     if sample is None:
@@ -64,12 +70,16 @@ def _load_one_vcf_file(
     tmpdir = tempfile.mkdtemp(prefix="normalize_vcf.", dir=temp_dir)
     simplified_vcf = os.path.join(tmpdir, "simplified.vcf")
     normalized_vcf = os.path.join(tmpdir, "normalized.vcf")
-    utils.simplify_vcf(vcf_file, simplified_vcf, ref_seqs=ref_seqs)
+    keep_all_alleles = not many_files
+    utils.simplify_vcf(
+        vcf_file, simplified_vcf, ref_seqs=ref_seqs, keep_all_alleles=keep_all_alleles
+    )
     utils.normalise_vcf(
         simplified_vcf, ref_fasta, normalized_vcf, break_alleles=break_alleles
     )
     os.unlink(simplified_vcf)
-    variants = []
+    called_variants = []
+    uncalled_variants = []
 
     with vcf_file_read.open_vcf_file_for_reading(normalized_vcf) as f:
         for line in f:
@@ -77,6 +87,7 @@ def _load_one_vcf_file(
                 continue
 
             record = vcf_record.VcfRecord(line)
+
             if record.POS < 0:
                 logging.warning(
                     f"VCF record with negative POS in file {vcf_file}. Ignoring: {record}"
@@ -100,24 +111,27 @@ def _load_one_vcf_file(
 
             gt_indexes = re.split("[/|]", record.FORMAT["GT"])
             if "." in gt_indexes:
-                continue
-            gt_indexes = set([int(x) for x in gt_indexes])
-            if gt_indexes == {0}:
-                continue
+                if many_files:
+                    continue
+                else:
+                    gt_indexes = {0}
+            else:
+                gt_indexes = set([int(x) for x in gt_indexes])
 
-            for i in gt_indexes:
-                if i > 0:
-                    variants.append(
-                        Variant(
-                            ref_seq_to_id[record.CHROM],
-                            record.POS,
-                            record.REF,
-                            record.ALT[i - 1],
-                        )
-                    )
+            for gt_index in range(1, len(record.ALT) + 1):
+                var = Variant(
+                    ref_seq_to_id[record.CHROM],
+                    record.POS,
+                    record.REF,
+                    record.ALT[gt_index - 1],
+                )
+                if gt_index in gt_indexes:
+                    called_variants.append(var)
+                else:
+                    uncalled_variants.append(var)
 
     utils.rm_rf(tmpdir)
-    return sample, variants
+    return sample, called_variants, uncalled_variants
 
 
 class Variants:
@@ -361,6 +375,7 @@ class VariantTracker:
         force=False,
         sample_limit=None,
         break_alleles=True,
+        many_files=True,
     ):
         if force:
             utils.rm_rf(self.root_dir)
@@ -380,6 +395,7 @@ class VariantTracker:
         self._add_var_block_file()
         self.variants = Variants()
         var_block = VariantBlock()
+        uncalled_variants = set()
 
         for i in range(0, len(infiles), cpus):
             with multiprocessing.Pool(cpus) as pool:
@@ -392,10 +408,14 @@ class VariantTracker:
                         itertools.repeat(self.ref_fasta),
                         itertools.repeat(temp_dir),
                         itertools.repeat(break_alleles),
+                        itertools.repeat(many_files),
                     ),
                 )
 
-            for sample, new_variants in new_variants_lists:
+            for sample, new_variants, new_uncalled_variants in new_variants_lists:
+                if not many_files:
+                    uncalled_variants.update(new_uncalled_variants)
+
                 if len(new_variants) == 0:
                     continue
 
@@ -422,6 +442,15 @@ class VariantTracker:
 
         if made_temp_dir:
             utils.rm_rf(temp_dir)
+
+        if not many_files:
+            self.samples[-1].append("uncalled")
+            var_block.add_samples(1)
+            for variant in uncalled_variants:
+                if variant not in self.variants:
+                    var_block.add_variants(1)
+                var_id = self.variants.add(variant)
+                var_block.set_variant(var_id, -1)
 
         logging.info(f"Loaded all {len(infiles)} VCF files")
         self._write_last_var_block_file(var_block)
