@@ -5,7 +5,7 @@ import pytest
 from bitarray import bitarray
 import pyfastaq
 
-from cluster_vcf_records import utils, variant_tracking, vcf_record
+from cluster_vcf_records import utils, variant_tracking, vcf_file_read, vcf_record
 
 this_dir = os.path.dirname(os.path.abspath(__file__))
 data_dir = os.path.join(this_dir, "data", "variant_tracking")
@@ -288,7 +288,11 @@ def test_VariantTracker_make_from_vcf_then_save_then_load_then_cluster():
     for block_file in expect_block_files:
         expect = os.path.join(expect_dir, block_file)
         got = os.path.join(root_dir, block_file)
-        assert filecmp.cmp(got, expect, shallow=False)
+        with vcf_file_read.open_vcf_file_for_reading(expect) as f:
+            expect_lines = [x.rstrip() for x in f]
+        with vcf_file_read.open_vcf_file_for_reading(got) as f:
+            got_lines = [x.rstrip() for x in f]
+        assert expect_lines == got_lines
         assert os.path.exists(f"{got}.tbi")
 
     # Now the root_dir exists, constructor should load data from directory
