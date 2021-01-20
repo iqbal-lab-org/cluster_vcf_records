@@ -8,8 +8,9 @@ Used by gramtools and minos - written specifically for those projects and no oth
 ## Dependencies
 
 * [vt](https://genome.sph.umich.edu/wiki/Vt)
-* [vcflib](https://github.com/vcflib/vcflib). Specifically, needs `vcfbreakmulti`,
-  `vcfallelicprimitives`, and `vcfuniq` to be installed and in your `$PATH`.
+* [vcflib](https://github.com/vcflib/vcflib). Specifically, needs either
+  `vcflib`, or all three of `vcfbreakmulti`,
+  `vcfallelicprimitives`, `vcfuniq` to be installed and in your `$PATH`.
 * [bcftools](https://samtools.github.io/bcftools/). This is optional. Only
   needed if you need to read bcf files.
 

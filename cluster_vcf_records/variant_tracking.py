@@ -171,7 +171,7 @@ class VariantBlock:
         if len(self.bitarrays) == 0:
             return 0
         else:
-            return self.bitarrays[0].length()
+            return len(self.bitarrays[0])
 
     def number_of_variants(self):
         return len(self.bitarrays)
@@ -250,7 +250,7 @@ def var_patterns_from_block_slices(block_files, wanted_variants, seq_id, start, 
         if len(block) == 0:
             continue
         sorted_vars = sorted(list(block.keys()))
-        samples = block[sorted_vars[0]].length()
+        samples = len(block[sorted_vars[0]])
 
         for i in range(samples):
             var_pattern = tuple(sorted([v for v in sorted_vars if block[v][i]]))
