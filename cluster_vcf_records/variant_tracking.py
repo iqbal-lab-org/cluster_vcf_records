@@ -316,6 +316,12 @@ class VariantTracker:
     def load_ref_seq_data(cls, fasta_file):
         seqs = {}
         pyfastaq.tasks.file_to_dict(fasta_file, seqs)
+        # Convert all nucleotides to uppercase, and only keep everything before
+        # first whitespace in sequence names
+        seqs = {k.split()[0]: v for k, v in seqs.items()}
+        for seq in seqs.values():
+            seq.id = seq.id.split()[0]
+            seq.seq = seq.seq.upper()
         ref_seq_names = sorted(seqs.keys())
         ref_seq_to_id = {x: i for i, x in enumerate(ref_seq_names)}
         return seqs, ref_seq_names, ref_seq_to_id
