@@ -138,7 +138,7 @@ class VcfRecordCluster:
         total_alleles_lower_bound = 1
         for x in snp_nucleotides:
             total_alleles_lower_bound *= len(x)
-        total_alleles_lower_bound += len(non_snps)
+        total_alleles_lower_bound *= len(non_snps)
 
         if max_alleles is not None and total_alleles_lower_bound > max_alleles:
             return None
