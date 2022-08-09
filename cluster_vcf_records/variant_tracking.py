@@ -15,6 +15,8 @@ import pysam
 from cluster_vcf_records import allele_combinations, utils, vcf_file_read, vcf_record
 
 
+acgt_regex = re.compile("^[ACGTacgt]+$")
+
 Variant = namedtuple("Variant", ["seq_id", "pos", "ref", "alt"])
 
 
@@ -106,13 +108,13 @@ def _load_one_vcf_file(
                 continue
 
             for i in gt_indexes:
-                if i > 0:
+                if i > 0 and acgt_regex.match(record.ALT[i - 1]) is not None:
                     variants.append(
                         Variant(
                             ref_seq_to_id[record.CHROM],
                             record.POS,
                             record.REF,
-                            record.ALT[i - 1],
+                            record.ALT[i - 1].upper(),
                         )
                     )
 
