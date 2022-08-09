@@ -53,6 +53,7 @@ def simplify_vcf(
                     )
                     continue
 
+                record.REF = record.REF.upper()
                 if ref_seqs is not None and not (
                     record.ref_string_matches_dict_of_ref_sequences(ref_seqs)
                 ):
