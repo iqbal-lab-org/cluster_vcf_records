@@ -257,6 +257,9 @@ def test_load_one_vcf_file():
         variant_tracking.Variant(seq_id=1, pos=1, ref="G", alt="C"),
         variant_tracking.Variant(seq_id=1, pos=1, ref="G", alt="A"),
         variant_tracking.Variant(seq_id=1, pos=2, ref="C", alt="A"),
+        variant_tracking.Variant(seq_id=1, pos=4, ref="T", alt="A"),
+        variant_tracking.Variant(seq_id=1, pos=5, ref="G", alt="C"),
+        variant_tracking.Variant(seq_id=1, pos=5, ref="G", alt="T"),
     ]
     assert got_variants == expect_variants
     os.rmdir(tmp_dir)

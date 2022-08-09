@@ -100,12 +100,13 @@ def _load_one_vcf_file(
                 )
                 continue
 
-            gt_indexes = re.split("[/|]", record.FORMAT["GT"])
-            if "." in gt_indexes:
-                continue
-            gt_indexes = set([int(x) for x in gt_indexes])
-            if gt_indexes == {0}:
-                continue
+            gt_indexes_list = re.split("[/|]", record.FORMAT["GT"])
+            gt_indexes = set()
+            for x in gt_indexes_list:
+                try:
+                    gt_indexes.add(int(x))
+                except:
+                    pass
 
             for i in gt_indexes:
                 if i > 0 and acgt_regex.match(record.ALT[i - 1]) is not None:
